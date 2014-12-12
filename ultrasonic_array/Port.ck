@@ -3,7 +3,7 @@
 // communicates with the Arduinos, pairs them up with the ports
 // CalArts Music Tech // MTIID4LIFE
 
-public class Handshake { 
+public class Port { 
 
     SerialIO.list() @=> string list[];
     int serial_port[list.cap()];
@@ -20,13 +20,13 @@ public class Handshake {
         handshake();
     } 
 
+    // returns the proper robot ID to the child class
     fun int port(int ID) {
-        // returns the proper robot ID to the child class
         return serial_port[robotID[ID]];
     }
 
+    // returns how many usb serial connections are available
     fun int num_ports() {
-        // returns how many usb serial connections are available
         int num;
         <<< "-", "" >>>;
         for (int i; i < serial_port.cap(); i++) {
@@ -39,8 +39,8 @@ public class Handshake {
         return num;
     }
    
+    // opens only how many serial ports there are usb ports connected
     fun void open_ports() {
-        // opens only how many serial ports there are usb ports connected
         for (int i; i < serial.cap(); i++) {
             if (!serial[i].open(serial_port[i], SerialIO.B9600, SerialIO.BINARY)) {
                 <<< "Unable to open serial device:", "\t", list[serial_port[i]] >>>;
@@ -53,8 +53,8 @@ public class Handshake {
         2.5::second => now;
     }
 
+    // pings the Arduinos and returns their 'arduinoID'
     fun void handshake() {
-        // pings the Arduinos and returns their 'arduinoID'
         [255, 255] @=> int ping[];
         for (int i ; i < serial.cap(); i++) {
             serial[i].writeBytes(ping);
@@ -65,8 +65,18 @@ public class Handshake {
         
     }
 
+    // spork to being receiving notes
+    fun void receive() {
+        while (true) {
+            int data[2];
+            serial[ID].onBytes(2) => now;
+            serial[ID].getBytes() @=> data;
+            <<< data[0], data[1] >>>:
+        }
+    }
+
+    // bitwise operations, allows note numbers 0-63 and note velocities 0-1023
     fun void note(int ID, int num, int vel) {
-        // bitwise operations, allows note numbers 0-63 and note velocities 0-1023
         int bytes[2];
         (num << 2) | (vel >> 8) => bytes[0]; 
         vel & 255 => bytes[1];
