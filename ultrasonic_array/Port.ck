@@ -10,19 +10,26 @@ public class Port {
     
     // calls num_ports() to find how many USB ports are available
     SerialIO serial[num_ports()];
-    int robotID[serial.cap()];
+    int arduinoID[serial.cap()];
+
+    // array for receiving sensor values
+    int sensor[9];
 
     fun void init() { 
-        for (int i; i < robotID.cap(); i++) {
-            i => robotID[i];
+        for (int i; i < arduinoID.cap(); i++) {
+            i => arduinoID[i];
         }
         open_ports();
         handshake();
     } 
 
-    // returns the proper robot ID to the child class
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // THIS FUNCTION MIGHT NOT BE NEEDED AT ALL
+    // MIGHT TRY DOING ALL COMMUNICATION FROM THIS CLASS
+    // AND ACCESSING MEMBERS FROM THE CLASS
+    // returns the proper arduino ID to the child class
     fun int port(int ID) {
-        return serial_port[robotID[ID]];
+        return serial_port[arduinoID[ID]];
     }
 
     // returns how many usb serial connections are available
@@ -55,12 +62,12 @@ public class Port {
 
     // pings the Arduinos and returns their 'arduinoID'
     fun void handshake() {
-        [255, 255] @=> int ping[];
+        [255, 255, 255] @=> int ping[];
         for (int i ; i < serial.cap(); i++) {
             serial[i].writeBytes(ping);
             serial[i].onByte() => now;
-            serial[i].getByte() => int arduinoID;
-            arduinoID => robotID[i];
+            serial[i].getByte() => int ID;
+            ID => arduinoID[i];
         }
         
     }
@@ -69,17 +76,33 @@ public class Port {
     fun void receive() {
         while (true) {
             int data[2];
+
+            //TODO: implement bit packing scheme for two vals
+            // which = 5 bits (16 values), 1 byte plus 3 bits (1024 values)
+
             serial[ID].onBytes(2) => now;
             serial[ID].getBytes() @=> data;
-            <<< data[0], data[1] >>>:
+            <<< "Receiving:", data[0], data[1] >>>:
+
+            //TODO: unpack values here and put into which and val
+            int which, val;
+
+            val => sensor[which];
         }
     }
 
-    // bitwise operations, allows note numbers 0-63 and note velocities 0-1023
+    // sends serial, allows note numbers 0-16 and frequency 0-262144 (0-26,214.4hz)
+    // might not be high enough resolution, a 4th byte might be needed 
     fun void note(int ID, int num, int vel) {
-        int bytes[2];
-        (num << 2) | (vel >> 8) => bytes[0]; 
-        vel & 255 => bytes[1];
+        int bytes[3];
+
+        // old code, kept for reference
+        // (num << 2) | (vel >> 8) => bytes[0]; 
+        // vel & 255 => bytes[1];
+
+        // TODO: implement bit packing scheme
+        // num = 5 bits (16 values), freq = 3 bits plus 2 bytes (262144 values)
         serial[ID].writeBytes(bytes);
+        <<< "Bytes:", bytes[0], bytes[1], bytes[0], "Num:", num, "Freq:", frq >>>;
     }
 }
