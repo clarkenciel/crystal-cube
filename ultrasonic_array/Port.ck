@@ -100,8 +100,8 @@ public class Port {
         // (num << 2) | (vel >> 8) => bytes[0]; 
         // vel & 255 => bytes[1];
 
-        // TODO: implement bit packing scheme
-        // num = 5 bits (16 values), freq = 3 bits plus 2 bytes (262144 values)
+        // TODO: implement bit packing scheme 67208864
+        // num = 5 bits (16 values), freq = 3 bits plus 2 bytes (262144 values), if 4 bytes used, 3 bits plus 3 bytes (67208864)
         serial[ID].writeBytes(bytes);
         <<< "Bytes:", bytes[0], bytes[1], bytes[0], "Num:", num, "Freq:", frq >>>;
     }
