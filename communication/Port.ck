@@ -68,12 +68,13 @@ public class Port {
             serial[i].onByte() => now;
             serial[i].getByte() => int ID;
             ID => arduinoID[i];
+            <<< ID >>>;
         }
         
     }
 
     // spork to begin receiving notes
-    fun void receive() {
+    fun void receive(int ID) {
         while (true) {
             int data[2];
 
@@ -102,4 +103,12 @@ public class Port {
 
         serial[ID].writeBytes(bytes);
     }
+}
+
+Port p;
+p.init();
+
+<<< "!", "" >>>;
+while (true) {
+    1::second => now;
 }
