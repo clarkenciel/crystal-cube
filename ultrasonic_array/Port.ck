@@ -62,7 +62,7 @@ public class Port {
 
     // pings the Arduinos and returns their 'arduinoID'
     fun void handshake() {
-        [255, 255, 255] @=> int ping[];
+        [255, 255, 255, 255] @=> int ping[];
         for (int i ; i < serial.cap(); i++) {
             serial[i].writeBytes(ping);
             serial[i].onByte() => now;
@@ -91,18 +91,17 @@ public class Port {
         }
     }
 
-    // sends serial, allows note numbers 0-16 and frequency 0-262144 (0-26,214.4hz)
-    // might not be high enough resolution, a 4th byte might be needed 
-    fun void note(int ID, int num, int vel) {
-        int bytes[3];
+    // sends serial, allows note numbers 0-16 and frequency 0-134217728 (13421.7728hz)
+    fun void note(int ID, int num, int frq) {
+        int bytes[4];
 
-        // old code, kept for reference
-        // (num << 2) | (vel >> 8) => bytes[0]; 
-        // vel & 255 => bytes[1];
+        // num 0-16, frq 0-134217728 (allows for four decimal precision)
+        num << 3 => bytes[0];
+        (vel >> 24) | bytes[0] => bytes[0];
+        (vel >> 16) & 255 => bytes[1];
+        (vel >> 8) & 255 => bytes[2];
+        vel & 255 => bytes[3];
 
-        // TODO: implement bit packing scheme 67208864
-        // num = 5 bits (16 values), freq = 3 bits plus 2 bytes (262144 values), if 4 bytes used, 3 bits plus 3 bytes (67208864)
         serial[ID].writeBytes(bytes);
-        <<< "Bytes:", bytes[0], bytes[1], bytes[0], "Num:", num, "Freq:", frq >>>;
     }
 }
