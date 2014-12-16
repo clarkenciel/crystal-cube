@@ -72,20 +72,18 @@ public class Port {
         
     }
 
-    // spork to being receiving notes
+    // spork to begin receiving notes
     fun void receive() {
         while (true) {
             int data[2];
 
-            //TODO: implement bit packing scheme for two vals
-            // which = 5 bits (16 values), 1 byte plus 3 bits (1024 values)
-
+            // waits for next messages
             serial[ID].onBytes(2) => now;
             serial[ID].getBytes() @=> data;
-            <<< "Receiving:", data[0], data[1] >>>:
 
-            //TODO: unpack values here and put into which and val
-            int which, val;
+            // bit unpacking
+            data[0] >> 2 => int which;
+            (data[0] << 8 | data[1]) => int val;
 
             val => sensor[which];
         }
@@ -95,12 +93,12 @@ public class Port {
     fun void note(int ID, int num, int frq) {
         int bytes[4];
 
-        // num 0-16, frq 0-134217728 (allows for four decimal precision)
+        // bit packing
         num << 3 => bytes[0];
-        (vel >> 24) | bytes[0] => bytes[0];
-        (vel >> 16) & 255 => bytes[1];
-        (vel >> 8) & 255 => bytes[2];
-        vel & 255 => bytes[3];
+        (frq >> 24) | bytes[0] => bytes[0];
+        (frq >> 16) & 255 => bytes[1];
+        (frq >> 8) & 255 => bytes[2];
+        frq & 255 => bytes[3];
 
         serial[ID].writeBytes(bytes);
     }
