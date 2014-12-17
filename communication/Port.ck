@@ -8,8 +8,8 @@ public class Port {
     SerialIO.list() @=> string list[];
     int serial_port[list.cap()];
     
-    // calls num_ports() to find how many USB ports are available
-    SerialIO serial[num_ports()];
+    // calls numPorts() to find how many USB ports are available
+    SerialIO serial[numPorts()];
     int arduinoID[serial.cap()];
 
     // array for receiving sensor values
@@ -19,7 +19,7 @@ public class Port {
         for (int i; i < arduinoID.cap(); i++) {
             i => arduinoID[i];
         }
-        open_ports();
+        openPorts();
         handshake();
     } 
 
@@ -34,7 +34,7 @@ public class Port {
     }
 
     // returns how many usb serial connections are available
-    fun int num_ports() {
+    fun int numPorts() {
         int num;
         <<< "-", "" >>>;
         for (int i; i < serial_port.cap(); i++) {
@@ -48,7 +48,7 @@ public class Port {
     }
    
     // opens only how many serial ports there are usb ports connected
-    fun void open_ports() {
+    fun void openPorts() {
         for (int i; i < serial.cap(); i++) {
             if (!serial[i].open(serial_port[i], SerialIO.B9600, SerialIO.BINARY)) {
                 <<< "Unable to open serial device:", "\t", list[serial_port[i]] >>>;
@@ -66,10 +66,9 @@ public class Port {
         [255, 255] @=> int ping[];
         for (int i ; i < serial.cap(); i++) {
             serial[i].writeBytes(ping);
-            <<< "Waiting", "" >>>;
             serial[i].onByte() => now;
             serial[i].getByte() => int ID;
-            <<< ID >>>;
+
             // sets arduino ID array
             ID => arduinoID[i];
         }
@@ -77,6 +76,7 @@ public class Port {
 
     // spork to begin receiving notes
     fun void receive(int ID) {
+        int which, val;
         while (true) {
             int data[2];
 
@@ -85,8 +85,8 @@ public class Port {
             serial[ID].getBytes() @=> data;
 
             // bit unpacking
-            data[0] >> 2 => int which;
-            (data[0] << 8 | data[1]) => int val;
+            data[0] >> 3 => which;
+            (data[0] & 7) << 7 | data[1] => val;
 
             // chucks val to sensor array
             val => sensor[which];
@@ -107,7 +107,6 @@ public class Port {
         // matches port to ID
         port(ID) => int p;
         if (p != -1) {
-            <<< bytes[0], bytes[1], bytes[2], bytes[3] >>>;
             serial[p].writeBytes(bytes);
         }
         else {
@@ -119,9 +118,11 @@ public class Port {
 Port p;
 p.init();
 
+spork ~ p.receive(0);
+
 int inc;
 while (true) {
     (inc + 1) % 6 => inc;
     0.5::second => now;
-    p.note(3, 3, 11160000);
+    //p.note(3, 3, 11160000);
 }
