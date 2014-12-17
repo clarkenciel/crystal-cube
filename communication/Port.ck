@@ -77,19 +77,21 @@ public class Port {
     // spork to begin receiving notes
     fun void receive(int ID) {
         int which, val;
-        while (true) {
-            int data[2];
+        int data[3];
 
+        while (true) {
             // waits for next messages
-            serial[ID].onBytes(2) => now;
+            serial[ID].onBytes(4) => now;
             serial[ID].getBytes() @=> data;
 
             // bit unpacking
-            data[0] >> 3 => which;
-            (data[0] & 7) << 7 | data[1] => val;
-
-            // chucks val to sensor array
-            val => sensor[which];
+            (data[2] >> 3) & 15 => which;
+            (data[2] & 7) << 7 | data[3] => val;
+        
+            // garbage filter
+            if (data[0] == 64 && data[1] == 64) {
+                val => sensor[which];
+            }
         }
     }
 
@@ -123,6 +125,6 @@ spork ~ p.receive(0);
 int inc;
 while (true) {
     (inc + 1) % 6 => inc;
+    <<< p.sensor[0], p.sensor[1] >>>;
     0.5::second => now;
-    //p.note(3, 3, 11160000);
 }
