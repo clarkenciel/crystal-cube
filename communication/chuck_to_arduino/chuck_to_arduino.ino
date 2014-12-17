@@ -13,8 +13,10 @@ char bytes[4];
 
 // for converting bytes to values
 int num;
-long long frq;
+long frq;
+long temp;
 
+// serial setup
 void setup() {
   Serial.begin(9600);
 
@@ -34,23 +36,26 @@ void loop() {
   }
 }
 
+// unpacks variables into
 void unpack() {
   // reads in a four element array from ChucK
   Serial.readBytes(bytes, 4);
 
-  // bit unpacking
+  // unpacks piezo number 0-31
   num = byte(bytes[0]) >> 3;
-  //frq = (byte(bytes[0]) << 24 | byte(bytes[1]) << 16 | byte(bytes[2]) << 8 | byte(bytes[3])) & 134217727; 
-  frq = byte(bytes[2] << 8); 
-  digitalWrite(12, HIGH);
-  delay(50);
-  digitalWrite(12, LOW); 
   
-  if (frq == 59904) {
-    digitalWrite(11, HIGH);
-    delay(50);
-    digitalWrite(11, LOW); 
-  }
+  // unpacks frequency value, 0-134217728
+  frq = (byte(bytes[0]) & 8) << 24;
+  temp = byte(bytes[1]);
+  frq += temp << 16;
+  temp = byte(bytes[2]);
+  frq += temp << 8; 
+  temp = byte(bytes[3]);
+  frq += temp;
+  
+  // gives 4 decimal point precision
+  frq = frq * 0.0001;
+  
   // will write to piezos here
   // -------------------------
   // num
