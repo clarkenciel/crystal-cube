@@ -1,46 +1,71 @@
-// MAJOR TODO:
-// add handshaking to distinguish between various Arduinos
-
-// ultrasonic_to_chuck.ino
+// arduino_to_chuck.ion
 // Eric Heep
-// sends any number of analog sensors out through
-// serial granted there are enough available analog pins
+// sends analog sensor messages to ChucK
+
+// ID number of the arduino, each robot must have a different one
+#define arduinoID 0
+
+// used to pair arduinos together
+int handshake;
 
 // constant
 #define NUM_SENSORS 6
 
 // for storing analog values and 
 // reducing redudant serial messages
-byte sensor[NUM_SENSORS];
-byte val;
+int sensor[NUM_SENSORS];
+int val[NUM_SENSORS];
 
 // for sending data
 byte bytes[2];
 
+// serial setup
 void setup() {
     Serial.begin(9600);
 }
 
+// main program
 void loop() {
+  if (handshake == 1) {
+    sendBytes();
+  }
+  else if (Serial.available() && handshake == 0) {
+    sendID();
+  }
+}
+
+void sendBytes() {
     // loops through number of ultrasonics
     // sends serial if the value has changed
     for (int i = 0; i < NUM_SENSORS; i++) {
 
       // reads in values starting at analog pin 2
-      val = analogRead(i + 2); 
+      val[i] = analogRead(i + 2); 
       
       // only sends if receiving a new value
-      if (val != sensor[i]) {
-         sensor[i] = val;
+      if (val[i] != sensor[i]) {
+         sensor[i] = val[i];
          
-         // packs values into an array
-         bytes[0] = i;
-         bytes[1] = val;
-         
-         // serial send as an array
+         // bit packing, ChucK can only accept 7 bit "bytes"
+         // 255 must be reserved
+         bytes[0] = i << 3 | val[i] >> 7;
+         bytes[1] = val[i] & 127;
          Serial.write(bytes, 2);
        }
     }
     // standard 10 millisecond delay for analog sensors
     delay(10);
 }
+
+// intializes communication
+void sendID() {
+  char initialize[2];
+  Serial.readBytes(initialize, 2);
+
+  if (byte(initialize[0]) == 255 && byte(initialize[1]) == 255) { 
+    Serial.write(arduinoID);
+    handshake = 1;
+  }
+}
+
+
