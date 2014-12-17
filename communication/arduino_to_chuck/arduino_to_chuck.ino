@@ -17,15 +17,20 @@ int sensor[NUM_SENSORS];
 int val[NUM_SENSORS];
 
 // for sending data
-byte bytes[2];
+uint8_t bytes[4];
 
 // serial setup
 void setup() {
-    Serial.begin(9600);
+  Serial.begin(9600);
 }
 
 // main program
 void loop() {
+  // initializing arrays to zero
+  for (int i = 0; i < NUM_SENSORS; i++) {
+    sensor[i] = 0;
+    val[i] = 0;  
+  }
   if (handshake == 1) {
     sendBytes();
   }
@@ -35,26 +40,26 @@ void loop() {
 }
 
 void sendBytes() {
-    // loops through number of ultrasonics
-    // sends serial if the value has changed
-    for (int i = 0; i < NUM_SENSORS; i++) {
+  // loops through number of ultrasonics
+  // sends serial if the value has changed
+  for (int i = 0; i < NUM_SENSORS; i++) {
+    // reads in values starting at analog pin 2
+    val[i] = analogRead(i + 2); 
 
-      // reads in values starting at analog pin 2
-      val[i] = analogRead(i + 2); 
-      
-      // only sends if receiving a new value
-      if (val[i] != sensor[i]) {
-         sensor[i] = val[i];
-         
-         // bit packing, ChucK can only accept 7 bit "bytes"
-         // 255 must be reserved
-         bytes[0] = i << 3 | val[i] >> 7;
-         bytes[1] = val[i] & 127;
-         Serial.write(bytes, 2);
-       }
+    // only sends if receiving a new value
+    if (val[i] != sensor[i]) {
+      sensor[i] = val[i];
+
+      // bit packing
+      bytes[0] = B1000000;
+      bytes[1] = B1000000;
+      bytes[2] = i << 3 | sensor[i] >> 7;
+      bytes[3] = sensor[i] & 127;
+      Serial.write(bytes, 4);
     }
-    // standard 10 millisecond delay for analog sensors
-    delay(10);
+  }
+  // standard 10 millisecond delay for analog sensors
+  delay(10);
 }
 
 // intializes communication
@@ -67,5 +72,8 @@ void sendID() {
     handshake = 1;
   }
 }
+
+
+
 
 
