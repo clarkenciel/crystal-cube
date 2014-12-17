@@ -23,13 +23,14 @@ public class Port {
         handshake();
     } 
 
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // THIS FUNCTION MIGHT NOT BE NEEDED AT ALL
-    // MIGHT TRY DOING ALL COMMUNICATION FROM THIS CLASS
-    // AND ACCESSING MEMBERS FROM THE CLASS
     // returns the proper arduino ID to the child class
     fun int port(int ID) {
-        return serial_port[arduinoID[ID]];
+        for (int i; i < arduinoID.cap(); i++) {
+            if (ID == arduinoID[i]) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     // returns how many usb serial connections are available
@@ -62,15 +63,16 @@ public class Port {
 
     // pings the Arduinos and returns their 'arduinoID'
     fun void handshake() {
-        [255, 255, 255, 255] @=> int ping[];
+        [255, 255] @=> int ping[];
         for (int i ; i < serial.cap(); i++) {
             serial[i].writeBytes(ping);
+            <<< "Waiting", "" >>>;
             serial[i].onByte() => now;
             serial[i].getByte() => int ID;
-            ID => arduinoID[i];
             <<< ID >>>;
+            // sets arduino ID array
+            ID => arduinoID[i];
         }
-        
     }
 
     // spork to begin receiving notes
@@ -86,11 +88,12 @@ public class Port {
             data[0] >> 2 => int which;
             (data[0] << 8 | data[1]) => int val;
 
+            // chucks val to sensor array
             val => sensor[which];
         }
     }
 
-    // sends serial, allows note numbers 0-16 and frequency 0-134217728 (13421.7728hz)
+    // sends serial, allows note numbers 0-32 and frequency 0-134217728 (13421.7728hz)
     fun void note(int ID, int num, int frq) {
         int bytes[4];
 
@@ -101,14 +104,24 @@ public class Port {
         (frq >> 8) & 255 => bytes[2];
         frq & 255 => bytes[3];
 
-        serial[ID].writeBytes(bytes);
+        // matches port to ID
+        port(ID) => int p;
+        if (p != -1) {
+            <<< bytes[0], bytes[1], bytes[2], bytes[3] >>>;
+            serial[p].writeBytes(bytes);
+        }
+        else {
+            <<< "No matching port for Arduino ID", ID >>>;
+        }
     }
 }
 
 Port p;
 p.init();
 
-<<< "!", "" >>>;
+int inc;
 while (true) {
-    1::second => now;
+    (inc + 1) % 6 => inc;
+    0.5::second => now;
+    p.note(3, 3, 11160000);
 }
