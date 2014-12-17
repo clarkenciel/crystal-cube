@@ -1,4 +1,4 @@
-// sensor-receive.ino
+// chuck_to_arduino.ino
 // Eric Heep
 // recieves messages from ChucK to send to piezo speakers
 
@@ -19,25 +19,20 @@ long temp;
 // serial setup
 void setup() {
   Serial.begin(9600);
-
-  // LED testing
-  for (int i = 0; i < 3; i++) {
-    pinMode(11 + i, OUTPUT);
-  }
 }
 
 // main program
 void loop() {
   if (Serial.available() && handshake == 1) {
-    unpack();
+    recieveBytes();
   }
   else if (Serial.available() && handshake == 0) {
     sendID();
   }
 }
 
-// unpacks variables into
-void unpack() {
+// receives bytes from ChucK for unpacking
+void recieveBytes() {
   // reads in a four element array from ChucK
   Serial.readBytes(bytes, 4);
 
