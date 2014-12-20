@@ -28,6 +28,39 @@ public class TCrystal  {
 	float crystalArray[0][3]; // store [dimension][node coordinates]
 	
 	// -- FUNCTIONS
+	public fun void run() {
+		spork ~ autoGrow(); // just keep growing!
+		spork ~ autoMutate();
+		spork ~ autoNormalize();
+	}
+
+	public fun void autoGrow() {
+		// container that loops grow function infinitely for sporking
+		while ( true ) {
+			grow();	
+			pulseRate => now;
+		}
+	}
+
+	public fun void autoMutate() {
+		// container to loop mutation listener/mutater
+		while( true ) {
+
+			if ( usListen ) {
+				// if the ultrasonics pick something up
+				//	do a mutation
+				spork ~ mutate();
+			}
+		}
+	}
+
+	public fun void autoNormalize() {
+		// container to loop normalizer
+		while( true ) {
+			normalize();
+		}		
+	}
+
 	public fun void grow() {
 		// add new coordinates to the crystal
 
@@ -37,7 +70,7 @@ public class TCrystal  {
 		float nodalDist[ newNodes.cap() ];
 
 		// 2. find distance of each point
-		for ( 0 => int i; i < newNods.cap(); i++ ) {
+		for ( 0 => int i; i < newNodes.cap(); i++ ) {
 			hDist( newNodes[i] ) @=> nodalDist[i];	
 		}
 
@@ -55,6 +88,9 @@ public class TCrystal  {
 		// mutate the various variables
 	}
 
+	private fun void normalize() {
+
+	}
 	private fun float hDist( float newCoord[] ) {
 		float totSum; // distance of new point to each existing
 				// point
