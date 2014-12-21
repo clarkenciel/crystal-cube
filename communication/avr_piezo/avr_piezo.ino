@@ -5,7 +5,7 @@
 #define PIN_DDR DDRD
 #define PIN_PORT PORTD
 
-double sr = 80000;
+double sr = 62500;
 double frq = 440.0;
 double cycles;
 double phase;
@@ -16,7 +16,7 @@ double pi = 3.14159265359;
 double two_pi = pi * 2;
 
 void setup() {  
-  frq = 440;
+  frq = 880;
   cycles = frq / sr;
   phase_inc = cycles * two_pi;
 
@@ -33,12 +33,13 @@ void setup() {
   TCCR0A = 0;
   TCCR0B = 0;
   TCNT0  = 0;
+  
   // set compare match register for 2khz increments
   OCR0A = 1;// = (16*10^6) / (20000*64) - 1 (must be <256)
   // turn on CTC mode
   TCCR0A |= (1 << WGM01);
-  // Set CS01 and CS00 bits for 64 prescaler
-  TCCR0B |= (1 << CS01) | (1 << CS00);   
+  // Set CS12 bit for 256 prescaler
+  TCCR0B |= (1 << CS12);   
   // enable timer compare interrupt
   TIMSK0 |= (1 << OCIE0A);
 
