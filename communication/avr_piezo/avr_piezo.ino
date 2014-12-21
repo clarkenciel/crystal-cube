@@ -26,6 +26,7 @@ void setup() {
   // halts interrupts
   cli();
 
+  // serial setup
   Serial.begin(9600);
 
   // setting timer 0 at 2khz
@@ -40,21 +41,6 @@ void setup() {
   TCCR0B |= (1 << CS01) | (1 << CS00);   
   // enable timer compare interrupt
   TIMSK0 |= (1 << OCIE0A);
-
-  /*
-  // setting timer 1 at 2mhz
-   TCCR1A = 0;
-   TCCR1B = 0;
-   TCNT1  = 0;
-   // setting reset clock to 65535 (max for timer 1, which is a 16bit clock)
-   OCR1A = 1;
-   // turn on CTC mode
-   TCCR1B |= (1 << WGM12);
-   // prescaler, set clk/8
-   TCCR1B |= (1 << CS21);  
-   // enable timer compare interrupt
-   TIMSK1 |= (1 << OCIE1A);
-   */
 
   // allows interrupts
   sei();
