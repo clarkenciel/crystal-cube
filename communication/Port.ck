@@ -4,7 +4,7 @@
 // CalArts Music Tech // MTIID4LIFE
 
 public class Port { 
-
+    // collects list of all connected serial devices
     SerialIO.list() @=> string list[];
     int serial_port[list.cap()];
     
@@ -115,6 +115,7 @@ public class Port {
         return (frq / arduino_sr) * two_pi;
     }
 
+    // turns float into an int for sending over serial
     fun int intPacking(float f) {
         return ((f + 1.0) * mult) $ int; 
     }
