@@ -17,104 +17,119 @@
         5. Repeat
 */
 public class TCrystal  {
-        // -- Variables
-        [2.0, 3.0, 5.0] @=> float dim[]; // pitch dimensions of cube (separate from
+    // -- Variables
+    [2.0, 3.0, 5.0] @=> float dim[]; // pitch dimensions of cube (separate from
                         //      geometric dimensions)
-        float mutateVar; 
-        20::ms => dur pulseRate;
-        3 => int dimensions; // number of dimensions that we care about
+    1.0 => float mutateVar; 
+    0::ms => dur pulseRate;
+    3 => int dimensions; // number of dimensions that we care about
 
-        // -- CRYSTAL
-        float crystalArray[1][3]; // store [dimension][node coordinates]
+    // -- CRYSTAL
+    float crystalArray[1][3]; // store [dimension][node coordinates]
         
         // -- FUNCTIONS
-        fun void run() {
-                spork ~ autoGrow(); // just keep growing!
-                //spork ~ autoMutate();
-                spork ~ autoNormalize();
-        }
+    fun void run() {
+        spork ~ autoGrow(); // just keep growing!
+        //spork ~ autoMutate();
+        spork ~ autoNormalize();
+    }
 
-        fun void autoGrow() {
-                // container that loops grow function infinitely for sporking
-                while ( true ) {
-                        grow(); 
-                        pulseRate => now;
-                }
+    fun void autoGrow() {
+        // container that loops grow function infinitely for sporking
+        while ( true ) {
+            grow(); 
+            pulseRate => now;
+            if ( crystalArray.cap() > 100 ) {
+                reset();
+            } 
         }
-        /*
-        fun void autoMutate() {
-                // container to loop mutation listener/mutater
-                while( true ) {
+    }
+    /*
+    fun void autoMutate() {
+            // container to loop mutation listener/mutater
+            while( true ) {
 
-                        if ( usListen ) {
-                                // if the ultrasonics pick something up
-                                //      do a mutation
-                                spork ~ mutate();
-                        }
-                }
-        }
-        */
-        fun void autoNormalize() {
-                // container to loop normalizer
-                while( true ) {
-                        normalize();
-                }               
-        }
+                    if ( usListen ) {
+                            // if the ultrasonics pick something up
+                            //      do a mutation
+                            spork ~ mutate();
+                    }
+            }
+    }
+    */
+    fun void autoNormalize() {
+            // container to loop normalizer
+            while( true ) {
+                    normalize();
+            }               
+    }
 
-       fun void mutate() {
-            // mutate the various variables
+   fun void mutate() {
+        // mutate the various variables
+        Math.random2( 0, 2) => int choice;
+        
+        if ( choice == 0 ) { 
             Math.random2f(1.0, 10.0) => mutateVar;
+        } else if ( choice == 1 ) {
+            Math.random2( 1, 3 ) => dimensions; 
+        } else if ( choice == 2 ) {
+            Math.random2f(0, 20)::ms => pulseRate; 
         }
+    }
 
-        fun void normalize() {
-        // gradually move back to a normal state
-        }
- 
-        fun void grow() {
-            // Add a new node to the crystal
-            float node[dimensions];
-            999999999999.0 => float distance;
-            float store[0];
- 
-            for ( 0 => int i; i < crystalArray.cap(); i++ ) {
-                for ( 0 => int j; j < dimensions; j++ ) {
-                    new float[dimensions] @=> node;
-                    makeNode( crystalArray[i] , j ) @=> node;                    
-                    // store the node if it isn't already in crystal and
-                    //  is shortest so far
-                    //<<< "distance:",distance >>>;
-                    //<<< "Node coords:" >>>;
-                    //printArr( node );
-                    //<<< "node distance:", hDist( node ) >>>;  
+    fun void normalize() {
+    // gradually move back to a normal state
+    }
 
-                    if ( hDist( node ) < distance ) {
-                        if ( doesExist( node ) == 0 ) {
+    fun float freqStream() {
+        
+    } 
+
+    fun void grow() {
+        // Add a new node to the crystal
+        float node[dimensions];
+        999999999999.0 => float distance;
+        float store[0];
+
+        for ( 0 => int i; i < crystalArray.cap(); i++ ) {
+            for ( 0 => int j; j < dimensions; j++ ) {
+                new float[dimensions] @=> node;
+                makeNode( crystalArray[i] , j ) @=> node;                    
+                // store the node if it isn't already in crystal and
+                //  is shortest so far
+                //<<< "distance:",distance >>>;
+                //<<< "Node coords:" >>>;
+                //printArr( node );
+                //<<< "node distance:", hDist( node ) >>>;  
+
+                if ( hDist( node ) < distance ) {
+                    if ( doesExist( node ) == 0 ) {
                         hDist( node ) => distance; 
                         node @=> store;
-                                 
-                        <<< "new node coords:\n" >>>;
-                        printArr( store );                    
-                        <<< "New Node Distance:", hDist( node ), "\n" >>>; 
+                             
+                        //<<< "new node coords:\n" >>>;
+                        //printArr( store );                    
+                        //<<< "New Node Distance:", hDist( node ), "\n" >>>; 
                     }
-                    }
-                    pulseRate => now; 
                 }
-            }                  
-            
+                //pulseRate => now; 
+            }
+        }                  
+        
+        // Add the new node to the blank node in the crystal
+        if ( store.cap() > 0 ) {
             // Add a new empty node to the crystal
             addNode();
-            
-            // Add the new node to the blank node in the crystal
-            if ( store.cap() > 0 ) {
-                <<< "adding store to crystal" >>>;
-                store @=> crystalArray[ crystalArray.cap() - 1 ];     
-            }
-            
-            // print the crystal
-            printCrystal();
+
+            //<<< "adding store to crystal" >>>;
+            store @=> crystalArray[ crystalArray.cap() - 1 ];     
         }
+        
+        // print the crystal
+        printCrystal();
+    }
     
-     fun float hDist( float newCoord[] ) {
+    fun float hDist( float newCoord[] ) {
         1 => float totSum; // distance of new point to each existing
                                 // point
 
@@ -134,7 +149,7 @@ public class TCrystal  {
             
         for ( 0 => int i; i < tempSum.cap(); i++ ) {
             Math.pow( dim[i], tempSum[i] ) * totSum => totSum;
-            <<< "Total Sum:", totSum >>>;
+            //<<< "Total Sum:", totSum >>>;
         }
 
         Math.log2( totSum ) => totSum; 
@@ -152,8 +167,8 @@ public class TCrystal  {
             for ( 0 => int j; j < crystalArray[i].cap(); j++ ) {
                 crystalArray[i][j] @=> tempArr[i][j];
             }
-            <<< "Adding to Crystal:" >>>;
-            printArr(tempArr[i]);
+            //<<< "Adding to Crystal:" >>>;
+            //printArr(tempArr[i]);
         }
          
         tempArr @=> crystalArray;
@@ -170,15 +185,15 @@ public class TCrystal  {
             for ( 0 => int j; j < dimensions; j++ ) {
                 if ( node[j] == crystalArray[i][j] ) {
                     testSum++;
-                    <<< "node:",node[j],"crystal:",crystalArray[i][j] >>>;
-                    <<< "testSum",testSum>>>;
+                    //<<< "node:",node[j],"crystal:",crystalArray[i][j] >>>;
+                    //<<< "testSum",testSum>>>;
                 }
             }
             if ( testSum == dimensions ) {
                 1 => check;
             }
         } 
-        <<< "Check",check >>>;
+        //<<< "Check",check >>>;
         return check;
     }
 
@@ -187,15 +202,21 @@ public class TCrystal  {
         //  in one dimension 
         float result[];
         new float[dimensions] @=> result;
+        [-1.0, 1.0] @=> float choice[];
 
         for ( 0 => int i; i < node.cap(); i++ ) {
             node[i] @=> result[i];
         }
 
-        1.0 + result[dimension] @=> result[dimension];
+        choice[ Math.random2(0, 1) ] * (mutateVar + result[dimension] ) @=> result[dimension];
         return result; 
     } 
     
+    fun void reset() {
+        // reset the crystal
+        new float[1][3] @=> crystalArray; 
+    }
+
     fun void printCrystal() {
         string print;
         "Current Crystal Coordinates: \n" => print;
