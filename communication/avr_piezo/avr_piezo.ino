@@ -7,8 +7,9 @@
 #define NUM_PIEZOS 3
 
 uint8_t pin_map;
+uint16_t mult = pow(10, 7);
 
-double sr = 15625;
+double sr = 31250;
 double frq[NUM_PIEZOS];
 double cycles[NUM_PIEZOS];
 double phase[NUM_PIEZOS];
@@ -18,11 +19,18 @@ double phase_inc[NUM_PIEZOS];
 double pi = 3.14159265359;
 double two_pi = pi * 2;
 
+// integer pi
+uint16_t int_pi = pi * int(mult);
+uint16_t int_two_pi = two_pi * int(mult);
+uint16_t int_phase_inc[NUM_PIEZOS]; 
+uint16_t int_phase[NUM_PIEZOS];
+
 void setup() {  
   for (int i = 0; i < NUM_PIEZOS; i++) {
-    frq[i] = 330 * (i + 1);
+    frq[i] = 440 + (i * 220);
     cycles[i] = frq[i] / sr;
     phase_inc[i] = cycles[i] * two_pi;
+    int_phase_inc[i] = pow(10, 7) * int(phase_inc);
   }
 
   // making my LEDs all ready
@@ -40,11 +48,11 @@ void setup() {
   TCNT0  = 0;
 
   // set compare match register for 2khz increments
-  OCR0A = 1;// = (16*10^6) / (20000*64) - 1 (must be <256)
+  OCR0A = 2;// = (16*10^6) / (20000*64) - 1 (must be <256)
   // turn on CTC mode
   TCCR0A |= (1 << WGM01);
   // Set CS12 bit for 256 prescaler
-  TCCR0B |= (1 << CS12) | (1 << CS10);   
+  TCCR0B |= (1 << CS12);   
   // enable timer compare interrupt
   TIMSK0 |= (1 << OCIE0A);
 
@@ -61,10 +69,10 @@ ISR(TIMER0_COMPA_vect){
     if (phase[i] <= pi) {
       pin_map = pin_map | 1 << (i + 2);
     }
-    
+
     // wrap
-    if (phase[i] >= two_pi) {
-      phase[i] -= two_pi; 
+    if (phase[i] >= int_two_pi) {
+      phase[i] -= int_two_pi; 
     }
   }
   PIN_PORT = pin_map;
@@ -75,6 +83,7 @@ void loop() {
   Serial.print("!");
   // boring loop is boring
 }
+
 
 
 
