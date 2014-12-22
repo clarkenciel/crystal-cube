@@ -52,7 +52,7 @@ void setup() {
   sei();
 }
 
-// loops at 62500hz
+// loops at 15625hz
 ISR(TIMER0_COMPA_vect){
   pin_map = 0;
   for (int i = 0; i < NUM_PIEZOS; i++) {
