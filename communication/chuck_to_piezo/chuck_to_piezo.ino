@@ -1,4 +1,4 @@
-// chuck_to_avr.ino
+// chuck_to_piezo.ino
 // Eric Heep
 // recieves messages from ChucK to send to piezo speakers
 
