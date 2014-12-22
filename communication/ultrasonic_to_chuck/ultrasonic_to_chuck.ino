@@ -1,4 +1,4 @@
-// arduino_to_chuck.ion
+// ultrasonic_to_chuck.ion
 // Eric Heep
 // sends analog sensor messages to ChucK
 
@@ -72,8 +72,3 @@ void sendID() {
     handshake = 1;
   }
 }
-
-
-
-
-
