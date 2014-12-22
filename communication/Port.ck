@@ -14,7 +14,18 @@ public class Port {
 
     // array for receiving sensor values
     int sensor[9];
+    
+    // arduino sampling rate
+    int arduino_sr;
+    arduinoSamplingRate(15625);
 
+    // exponential multiplier for sending serial
+    Math.pow(10, 7) => float mult;
+
+    // two pi
+    pi * 2.0 => float two_pi;
+
+    // pairs arduinos and ports
     fun void init() { 
         for (int i; i < arduinoID.cap(); i++) {
             i => arduinoID[i];
@@ -22,6 +33,11 @@ public class Port {
         openPorts();
         handshake();
     } 
+
+    // sets arduino sampling rate
+    fun void arduinoSamplingRate(int asr) {
+        asr => arduino_sr;
+    }
 
     // returns the proper arduino ID to the child class
     fun int port(int ID) {
@@ -68,7 +84,6 @@ public class Port {
             serial[i].writeBytes(ping);
             serial[i].onByte() => now;
             serial[i].getByte() => int ID;
-
             // sets arduino ID array
             ID => arduinoID[i];
         }
@@ -95,16 +110,28 @@ public class Port {
         }
     }
 
-    // sends serial, allows note numbers 0-32 and frequency 0-134217728 (13421.7728hz)
-    fun void note(int ID, int num, int frq) {
+    // tranlates frequency to phase increment
+    fun float frequencyToPhaseIncrement(float frq) {
+        return (frq / arduino_sr) * two_pi;
+    }
+
+    fun int intPacking(float f) {
+        return ((f + 1.0) * mult) $ int; 
+    }
+
+    // sends serial, allows note numbers 0-32
+    // and phase increment 0-134217728 
+    fun void note(int ID, int num, float frq) {
         int bytes[4];
+
+        intPacking(frequencyToPhaseIncrement(frq)) => int phase_inc;
 
         // bit packing
         num << 3 => bytes[0];
-        (frq >> 24) | bytes[0] => bytes[0];
-        (frq >> 16) & 255 => bytes[1];
-        (frq >> 8) & 255 => bytes[2];
-        frq & 255 => bytes[3];
+        (phase_inc >> 24) | bytes[0] => bytes[0];
+        (phase_inc >> 16) & 255 => bytes[1];
+        (phase_inc >> 8) & 255 => bytes[2];
+        phase_inc & 255 => bytes[3];
 
         // matches port to ID
         port(ID) => int p;
@@ -120,11 +147,11 @@ public class Port {
 Port p;
 p.init();
 
-spork ~ p.receive(0);
-
+//spork ~ p.receive(0);
 int inc;
-while (true) {
-    (inc + 1) % 6 => inc;
-    <<< p.sensor[0], p.sensor[1] >>>;
-    0.5::second => now;
+2::second => now;
+while (true) {  
+    (inc + 1) % 5000 => inc;
+    p.note(3, 0, 1220);
+    2::second => now;
 }
