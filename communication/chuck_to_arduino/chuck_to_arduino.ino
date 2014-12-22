@@ -13,8 +13,8 @@ char bytes[4];
 
 // for converting bytes to values
 int num;
-long frq;
 long temp;
+long phase_inc;
 
 // serial setup
 void setup() {
@@ -39,22 +39,14 @@ void recieveBytes() {
   // unpacks piezo number 0-31
   num = byte(bytes[0]) >> 3;
   
-  // unpacks frequency value, 0-134217728
-  frq = (byte(bytes[0]) & 8) << 24;
+  // unpacks frequency value, 0-134217728, 27-bits
+  phase_inc = (byte(bytes[0]) & 8) << 24;
   temp = byte(bytes[1]);
-  frq += temp << 16;
+  phase_inc += temp << 16;
   temp = byte(bytes[2]);
-  frq += temp << 8; 
+  phase_inc += temp << 8; 
   temp = byte(bytes[3]);
-  frq += temp;
-  
-  // gives 4 decimal point precision
-  frq = frq * 0.0001;
-  
-  // will write to piezos here
-  // -------------------------
-  // num
-  // frq * 0.001 
+  phase_inc += temp;
 }
 
 // intializes communication
@@ -67,12 +59,3 @@ void sendID() {
     handshake = 1;
   }
 }
-
-
-
-
-
-
-
-
-
