@@ -1,13 +1,9 @@
-[0,1] @=> int arr1[];
-[2,3] @=> int arr2[];
-0 => int dist;
-0 => int tempdist;
+int arr[1][0];
+[1.0, 2.0, 3.0] @=> float arr2[];
+arr << new int[3] ;
 
-for ( 0 => int i; i < arr1.cap(); i++ ) {
-	Math.abs( arr2[i] - arr1[i] )  +=> tempdist;
-	<<< tempdist >>>;
-}	 
-
-tempdist => dist;
-
-<<< dist >>>;
+for ( 0 => int i; i < arr.cap(); i++ ) {
+	for ( 0 => int j; j < arr[i].cap(); i++ ) {
+		<<< arr[i][j] >>>;
+	}
+}
