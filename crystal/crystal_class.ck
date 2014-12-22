@@ -5,9 +5,6 @@
 /* Date: 12/17/2014
 
 /* Explanation:
-        s( dimension 1 expansion ) = log2( dim1Num^sumDim1Vals );
-        s( dimension 2 expansion ) = log2( dim1Num^ );
-        
         taxi distances! for all new points! also think of them not as
         ratios, but as points on a plane where the coordinates = 
         the exponents for the different dimensional #s yay peter!!
@@ -21,11 +18,11 @@
 */
 public class TCrystal  {
         // -- Variables
-        float dim[][]; // pitch dimensions of cube (separate from
+        [2.0, 3.0, 5.0] @=> float dim[]; // pitch dimensions of cube (separate from
                         //      geometric dimensions)
         float mutateVar; 
         20::ms => dur pulseRate;
-        2 => int dimensions; // number of dimensions that we care about
+        3 => int dimensions; // number of dimensions that we care about
 
         // -- CRYSTAL
         float crystalArray[1][3]; // store [dimension][node coordinates]
@@ -64,129 +61,159 @@ public class TCrystal  {
                 }               
         }
 
-        fun void grow() {
-                // add new coordinates to the crystal
-
-                // -- FUNC VARS
-                // 1. generate new points
-                newNodes( crystalArray ) @=> float potential[][];
-                 //<<< "new nodes generated" >>>;
-                float nodalDist[ potential.cap() ];
-
-                // 2. find distance of each point
-                for ( 0 => int i; i < potential.cap(); i++ ) {
-                        hDist( potential[i] ) @=> nodalDist[i]; 
-            
-                }
-                //<<< "distances acquired" >>>;
-
-                // 3. select point with shortest distance
-                shortest( nodalDist ) => int least; 
-                <<< least >>>;
-                // 4. add those coordinates to the crystal array
-                addNode(); // add new blank node to the crystal
-                
-            for ( 0 => int i; i < potential[least].cap(); i++ ) {
-                    potential[least][i] @=> crystalArray[ crystalArray.cap() -1 ][i];
-                    <<< "New Node:", crystalArray[ crystalArray.cap() - 1][i] >>>;
-                    ms => now;
-            }
-        }
-
-        fun void mutate() {
-                // mutate the various variables
-                Math.random2f(1.0, 10.0) => mutateVar;
+       fun void mutate() {
+            // mutate the various variables
+            Math.random2f(1.0, 10.0) => mutateVar;
         }
 
         fun void normalize() {
         // gradually move back to a normal state
         }
-    
-        fun float hDist( float newCoord[] ) {
-            float totSum; // distance of new point to each existing
-                                // point
-
-            float tempSum; // distance of new point to a single 
-                                // existing point 
-
-            // Cycle through each existing point in crystal 
-            for ( 0 => int i; i < crystalArray.cap(); i++ ) {
-
-                // loop through the specific coordinates of each crystal node
-                for ( 0 => int j; j < crystalArray[i].cap(); j++ ){
-                    // get difference in each coordinate
-                    Math.fabs( newCoord[j] - crystalArray[i][j] ) +=> tempSum;
-                    //<<< "temp sum:", tempSum, "\n\tj:", j >>>;
-                }                          
-
-                // add temporary sum to the total sum
-                tempSum +=> totSum;
-                //<<< "totSum:",totSum>>>;
-            }
-
-            // return the total distance of this node       
-            return totSum;
-        }
-                                                        
-        fun void newNodes() {
-            // generate coordinates for new nodes based on existing nodes in the 
-            //  crystal
+ 
+        fun void grow() {
+            // Add a new node to the crystal
             float node[dimensions];
-            float distance;
+            hDist( makeNode( crystalArray[0], 0 ) ) => float distance;
             float store[dimensions];
  
-            for ( 0 => int i; i < crystal.cap(); i++ ) {
+            for ( 0 => int i; i < crystalArray.cap(); i++ ) {
                 for ( 0 => int j; j < dimensions; j++ ) {
-                    makeNode( crystal[i] ) @=> node;                    
-                    
-                    if ( !doesExist( node ) && hDist( node ) < dist ) {
+                    new float[3] @=> node;
+                    makeNode( crystalArray[i] , j ) @=> node;                    
+                    // store the node if it isn't already in crystal and
+                    //  is shortest so far
+                    <<< hDist( node ) >>>;
+                    printArr( node );
+
+                    if ( hDist( node ) < distance && !doesExist( node ) ) {
+                        <<< "hi!" >>>;
                         node @=> store;
+                                 
+                        <<< "new node coords:\n" >>>;
+                        printArr( store );                    
+                        <<< "New Node Distance:", hDist( node ), "\n" >>>; 
                     }
+                    pulseRate => now; 
                 }
             }                  
             
+            // Add a new empty node to the crystal
             addNode();
-            node @=> crystal[ crystal.cap() - 1 ];
+            
+            // Add the new node to the blank node in the crystal
+            store @=> crystalArray[ crystalArray.cap() - 1 ];     
+            
+            // print the crystal
+            printCrystal();
+        }
+    
+     fun float hDist( float newCoord[] ) {
+        1 => float totSum; // distance of new point to each existing
+                                // point
+
+        float tempSum[dimensions]; // distance of new point to a single 
+                            // existing point 
+
+        // Cycle through each existing point in crystal 
+        for ( 0 => int i; i < crystalArray.cap(); i++ ) {
+
+            // loop through the specific coordinates of each crystal node
+            for ( 0 => int j; j < dimensions; j++ ){
+                    // get difference in each coordinate
+                 Math.fabs( newCoord[j] - crystalArray[i][j] ) +=> tempSum[j] ;
+                //<<< "temp sum:", tempSum, "\n\tj:", j >>>;
+            }                          
+        }
+            
+        for ( 0 => int i; i < tempSum.cap(); i++ ) {
+            Math.pow( dim[i], tempSum[i] ) * totSum => totSum;
+            //<<< totSum >>>;
+        }
+
+        Math.log2( totSum ) => totSum; 
+
+        // return the total distance of this node       
+        return totSum;
+    }
+                                                        
+       
+    fun void addNode() {
+        // add blank node to the crystal array: create longer copy
+        new float[ crystalArray.cap() + 1 ][3] @=> float tempArr[][];
                 
+        for ( 0 => int i; i < crystalArray.cap(); i++ ) {
+            for ( 0 => int j; j < crystalArray[i].cap(); j++ ) {
+                crystalArray[i][j] @=> tempArr[i][j];
+            }
+            <<< "Adding to Crystal:" >>>;
+            printArr(tempArr[i]);
         }
-        
-        fun int shortest( float nodeDists[] ) {
-                // find new node with shortest distance to existing crystal
-                nodeDists[0] => float leastVal;
-                0 => int leastInd;
-
-                for ( 0 => int i; i < nodeDists.cap(); i++ ) {
-                        if ( nodeDists[i] < leastVal ) {
-                                nodeDists[i] => leastVal;
-                                i => leastInd;
-                        }                                       
-                } 
-
-                // return the index of the new node with the shortest
-                //      distance
-                return leastInd;
-        }
-
-        fun void addNode() {
-                // add blank node to the crystal array
-                new float[ crystalArray.cap() + 1 ][3] @=> float tempArr[][];
-                
-                for ( 0 => int i; i < crystalArray.cap(); i++ ) {
-                        for ( 0 => int j; j < crystalArray[i].cap(); j++ ) {
-                                crystalArray[i][j] @=> tempArr[i][j];
-                        }
-                }
-        
-                tempArr @=> crystalArray;
-        }
+         
+        tempArr @=> crystalArray;
+    }
 
     fun int doesExist( float node[] ) {
-
+        // Loop through each node in crystal and check each of it's
+        //  coords against the input node. There is a match if the
+        //  match sum == 3.
+        0 => int testSum;
+        0 => int check;
+        for ( 0 => int i; i < crystalArray.cap(); i++ ) {
+            0 => testSum;
+            for ( 0 => int j; j < dimensions; j++ ) {
+                if ( node[j] == crystalArray[i][j] ) {
+                    testSum++;
+                }
+            }
+            if ( testSum == dimensions ) {
+                1 => check;
+            }
+        } 
+        return check;
     }
 
     fun float[] makeNode( float node[], int dimension ) {
-
+        // Create a node from an existing node that is expanded
+        //  in one dimension 
+        node @=> float result[];
+        
+        1 +=> result[dimension];
+        return result; 
     } 
+    
+    fun void printCrystal() {
+        string print;
+        "Current Crystal Coordinates: \n" => print;
+        for ( 0 => int i; i < crystalArray.cap(); i++ ) {
+            "\t[ " +=> print;
+            for ( 0 => int j; j < dimensions; j++ ) {
+              crystalArray[i][j] + ", " +=> print;
+            }
+            "]\n" +=> print; 
+        }
+        "\n" +=> print;
+        <<< print >>>;
+    }
+
+    fun void printArr( float arr[] ) {
+        string print;
+        "\n\t[ " +=> print;
+        for ( 0 => int i; i < arr.cap(); i++ ) {
+           arr[i] + ", " +=> print;
+        }
+        "]" +=> print;
+        <<< print >>>;
+    } 
+    
+    fun void printArr( int arr[] ) {
+        string print;
+        "\n\t[ " +=> print;
+        for ( 0 => int i; i < arr.cap(); i++ ) {
+           arr[i] + ", " +=> print;
+        }
+        "]" +=> print;
+        <<< print >>>;
+    }
 }
 
 
