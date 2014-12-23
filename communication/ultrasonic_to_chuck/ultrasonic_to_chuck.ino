@@ -1,14 +1,18 @@
 // ultrasonic_to_chuck.ion
-// Eric Heep
-// sends analog sensor messages to ChucK
 
-// ID number of the arduino, each robot must have a different one
+// Eric Heep
+// sends analog sensor messages to ChucK,
+// created for the Crystal Cube installation
+// in collaboration with Danny Clarke
+// CalArts Music Tech // MTIID4LIFE
+
+// ID number of the arduino
 #define arduinoID 0
 
 // used to pair arduinos together
 int handshake;
 
-// constant
+// amount of sensors connected 
 #define NUM_SENSORS 6
 
 // for storing analog values and 
@@ -19,34 +23,14 @@ int val[NUM_SENSORS];
 // for sending data
 uint8_t bytes[4];
 
-// serial setup
-void setup() {
-  Serial.begin(9600);
-}
-
-// main program
-void loop() {
-  // initializing arrays to zero
-  for (int i = 0; i < NUM_SENSORS; i++) {
-    sensor[i] = 0;
-    val[i] = 0;  
-  }
-  if (handshake == 1) {
-    sendBytes();
-  }
-  else if (Serial.available() && handshake == 0) {
-    sendID();
-  }
-}
-
+// loops at 10ms
 void sendBytes() {
-  // loops through number of ultrasonics
-  // sends serial if the value has changed
+  // loops through collection of sensors 
   for (int i = 0; i < NUM_SENSORS; i++) {
     // reads in values starting at analog pin 2
     val[i] = analogRead(i + 2); 
 
-    // only sends if receiving a new value
+    // checks for a new value
     if (val[i] != sensor[i]) {
       sensor[i] = val[i];
 
@@ -67,8 +51,29 @@ void sendID() {
   char initialize[2];
   Serial.readBytes(initialize, 2);
 
+  // sends back arduion ID if handshake matches
   if (byte(initialize[0]) == 255 && byte(initialize[1]) == 255) { 
     Serial.write(arduinoID);
     handshake = 1;
+  }
+}
+
+// serial setup
+void setup() {
+  Serial.begin(57600);
+}
+
+// main program
+void loop() {
+  // initializing arrays to zero
+  for (int i = 0; i < NUM_SENSORS; i++) {
+    sensor[i] = 0;
+    val[i] = 0;  
+  }
+  if (handshake == 1) {
+    sendBytes();
+  }
+  else if (Serial.available() && handshake == 0) {
+    sendID();
   }
 }

@@ -1,12 +1,17 @@
 // chuck_to_piezo.ino
 
 // Eric Heep
-// recieves messages from ChucK to simultaneously 
-// control multiple piezo speakers, created for the
-// Crystal Cube installation in collaboration with Danny Clarke
+// Recieves messages from ChucK to simultaneously 
+// control multiple piezo speakers
 
-// ID number of the arduino, each robot must have a different one
+// Created for the Crystal Cube installation 
+// in collaboration with Danny Clarke
+// CalArts Music Tech // MTIID4LIFE
+
+// ID number of the arduino
 #define arduinoID 3
+
+// readies port C
 #define PIN_DDR DDRC
 #define PIN_PORT PORTC
 
@@ -34,6 +39,36 @@ double phase_inc[NUM_PIEZOS];
 // delicious pi
 double pi = 3.14159265359;
 double two_pi = pi * 2.0;
+
+// receives bytes from ChucK for unpacking
+void recieveBytes() {
+  // reads in a four element array from ChucK
+  Serial.readBytes(bytes, 4);
+
+  // unpacks piezo number 0-31
+  num = byte(bytes[0]) >> 3;
+
+  // unpacks phase increment as a long int
+  phase_inc_input = (byte(bytes[0]) & 8) << 24;
+  phase_inc_input += long(byte(bytes[1])) << 16;
+  phase_inc_input += long(byte(bytes[2])) << 8; 
+  phase_inc_input += long(byte(bytes[3]));
+
+  // converts phase increment value back to float
+  phase_inc[num] = (phase_inc_input * mult) - 1.0;
+}
+
+// intializes communication
+void sendID() {
+  char initialize[2];
+  Serial.readBytes(initialize, 2);
+
+  // sends back arduion ID if handshake matches
+  if (byte(initialize[0]) == 255 && byte(initialize[1]) == 255) { 
+    Serial.write(arduinoID);
+    handshake = 1;
+  }
+}
 
 // sets up serial and timer interrupt
 void setup() { 
@@ -82,35 +117,7 @@ ISR(TIMER0_COMPA_vect){
   PIN_PORT = pin_map;
 }
 
-// receives bytes from ChucK for unpacking
-void recieveBytes() {
-  // reads in a four element array from ChucK
-  Serial.readBytes(bytes, 4);
 
-  // unpacks piezo number 0-31
-  num = byte(bytes[0]) >> 3;
-
-  // unpacks phase increment as a long int
-  phase_inc_input = (byte(bytes[0]) & 8) << 24;
-  phase_inc_input += long(byte(bytes[1])) << 16;
-  phase_inc_input += long(byte(bytes[2])) << 8; 
-  phase_inc_input += long(byte(bytes[3]));
-
-  // converts phase increment value back to float
-  phase_inc[num] = (phase_inc_input * mult) - 1.0;
-}
-
-// intializes communication
-void sendID() {
-  char initialize[2];
-  Serial.readBytes(initialize, 2);
-
-  // sends back arduion ID if handshake matches
-  if (byte(initialize[0]) == 255 && byte(initialize[1]) == 255) { 
-    Serial.write(arduinoID);
-    handshake = 1;
-  }
-}
 
 // loop
 void loop() {
