@@ -39,7 +39,7 @@ public class Port {
         asr => arduino_sr;
     }
 
-    // returns the proper arduino ID to the child class
+    // matches the proper arduino ID to the arduinoID array index
     fun int port(int ID) {
         for (int i; i < arduinoID.cap(); i++) {
             if (ID == arduinoID[i]) {
@@ -66,7 +66,7 @@ public class Port {
     // opens only how many serial ports there are usb ports connected
     fun void openPorts() {
         for (int i; i < serial.cap(); i++) {
-            if (!serial[i].open(serial_port[i], SerialIO.B9600, SerialIO.BINARY)) {
+            if (!serial[i].open(serial_port[i], SerialIO.B57600, SerialIO.BINARY)) {
                 <<< "Unable to open serial device:", "\t", list[serial_port[i]] >>>;
             }
             else {
@@ -86,6 +86,7 @@ public class Port {
             serial[i].getByte() => int ID;
             // sets arduino ID array
             ID => arduinoID[i];
+            <<< ID, "" >>>;
         }
     }
 
@@ -149,10 +150,13 @@ Port p;
 p.init();
 
 //spork ~ p.receive(0);
-int inc;
-2::second => now;
+
 while (true) {  
-    (inc + 1) % 5000 => inc;
-    p.note(3, 0, 1220);
-    2::second => now;
+    p.note(3, 0, 440);
+    p.note(3, 1, 660);
+    p.note(3, 2, 880);
+    p.note(3, 3, 1100);
+    p.note(3, 4, 1320);
+    1.0::second => now;
+
 }
