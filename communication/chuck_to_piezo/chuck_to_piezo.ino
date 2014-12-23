@@ -4,15 +4,16 @@
 
 // ID number of the arduino, each robot must have a different one
 #define arduinoID 3
-#define PIN_DDR DDRB
-#define PIN_PORT PORTB
-#define NUM_PIEZOS 2
+#define PIN_DDR DDRC
+#define PIN_PORT PORTC
+#define NUM_PIEZOS 5
 
 // communication variables
-int num;
-long temp;
-int handshake;
+byte handshake;
 char bytes[4];
+
+// piezo variables
+byte num;
 long phase_inc_input;
 
 // stores pin configuration
@@ -29,12 +30,12 @@ double two_pi = pi * 2.0;
 
 void setup() { 
   // serial setup
-  Serial.begin(9600);
+  Serial.begin(57600);
 
   // readying piezos
-  PIN_DDR |= (1 << DDB0)|(1 << DDB1)|(1 << DDB2)|(1 << DDB3)|(1 << DDB4)|(1 << DDB5);
-  // halts interrupts
-  cli();
+  PIN_DDR |= (1 << DDC3)|(1 << DDC4)|(1 << DDC5);
+  // halts interrupts, disabled
+  // cli();
   TCCR0A = 0;
   TCCR0B = 0;
   TCNT0  = 0;
@@ -42,10 +43,8 @@ void setup() {
   OCR0A = 1;
   // turn on CTC mode
   TCCR0A |= (1 << WGM01);
-  //TCCR1B |= (1 << WGM12);
-  //TCCR2A |= (1 << WGM21);
-  // Set CS12 bit for 256 prescaler
-  TCCR0B |= (1 << CS12) | (1 << CS10);   
+  // Set CS12 and CS10 bit for 1024 prescaler
+  TCCR0B |= (1 << CS12) | (1 << CS10);  
   // enable timer compare interrupt
   TIMSK0 |= (1 << OCIE0A);
   // allows interrupts
@@ -54,19 +53,24 @@ void setup() {
 
 // loops at 15625hz
 ISR(TIMER0_COMPA_vect){
+  // resets pin map
   pin_map = 0;
+
+  // cycles through piezos
   for (int i = 0; i < NUM_PIEZOS; i++) {
     phase[i] += phase_inc[i];
 
+    // sets individual piezo on the pin map
     if (phase[i] <= pi && phase_inc[i] != 0.0) {
-      pin_map = pin_map | 1 << (i + 1);
+      pin_map = pin_map | 1 << (i + 3);
     }
 
-    // wrap
+    // wraps if above two pi
     if (phase[i] >= two_pi) {
       phase[i] -= two_pi; 
     }
   }
+  // sets pin map
   PIN_PORT = pin_map;
 }
 
@@ -78,14 +82,13 @@ void recieveBytes() {
   // unpacks piezo number 0-31
   num = byte(bytes[0]) >> 3;
 
-  // unpacks phase increment
+  // unpacks phase increment as a long int
   phase_inc_input = (byte(bytes[0]) & 8) << 24;
-  temp = byte(bytes[1]);
-  phase_inc_input += temp << 16;
-  temp = byte(bytes[2]);
-  phase_inc_input += temp << 8; 
-  temp = byte(bytes[3]);
-  phase_inc_input += temp;
+  phase_inc_input += long(byte(bytes[1])) << 16;
+  phase_inc_input += long(byte(bytes[2])) << 8; 
+  phase_inc_input += long(byte(bytes[3]));
+
+  // converts phase increment value back to float
   phase_inc[num] = (phase_inc_input * mult) - 1.0;
 }
 
@@ -94,6 +97,7 @@ void sendID() {
   char initialize[2];
   Serial.readBytes(initialize, 2);
 
+  // sends back arduion ID if handshake matches
   if (byte(initialize[0]) == 255 && byte(initialize[1]) == 255) { 
     Serial.write(arduinoID);
     handshake = 1;
@@ -109,3 +113,7 @@ void loop() {
     sendID();
   }
 }
+
+
+
+
