@@ -1,11 +1,16 @@
 // chuck_to_piezo.ino
+
 // Eric Heep
-// recieves messages from ChucK to send to piezo speakers
+// recieves messages from ChucK to simultaneously 
+// control multiple piezo speakers, created for the
+// Crystal Cube installation in collaboration with Danny Clarke
 
 // ID number of the arduino, each robot must have a different one
 #define arduinoID 3
 #define PIN_DDR DDRC
 #define PIN_PORT PORTC
+
+// only reliable for up to 5 piezos at a time
 #define NUM_PIEZOS 5
 
 // communication variables
@@ -16,24 +21,27 @@ char bytes[4];
 byte num;
 long phase_inc_input;
 
+// for converting from phase increment from int to float
+double mult = pow(10, -7);
+
 // stores pin configuration
 uint8_t pin_map;
 
 // phase 
 double phase[NUM_PIEZOS];
 double phase_inc[NUM_PIEZOS];
-double mult = pow(10, -7);
 
 // delicious pi
 double pi = 3.14159265359;
 double two_pi = pi * 2.0;
 
+// sets up serial and timer interrupt
 void setup() { 
   // serial setup
   Serial.begin(57600);
 
-  // readying piezos
-  PIN_DDR |= (1 << DDC3)|(1 << DDC4)|(1 << DDC5);
+  // readying piezos pins
+  PIN_DDR |= (1 << DDC1)|(1 << DDC2)|(1 << DDC3)|(1 << DDC4)|(1 << DDC5);
   // halts interrupts, disabled
   // cli();
   TCCR0A = 0;
@@ -113,7 +121,3 @@ void loop() {
     sendID();
   }
 }
-
-
-
-
