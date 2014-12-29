@@ -1,21 +1,21 @@
-// TODO: try this with associative arrays -> dynamic adding
-
 /* James Tenney Harmonic Space Crystal Implementation
 /* Author: Danny Clarke, with copious thanks to Peter Nelson
-/* Date: 12/17/2014
+/* Developed in collaboration with Eric Heep at CalArts
+/* Date: 12/29/2014
 
 /* Explanation:
-        taxi distances! for all new points! also think of them not as
-        ratios, but as points on a plane where the coordinates = 
-        the exponents for the different dimensional #s yay peter!!
-        
-        So:
-        1. Find the coordinates for each potential new point
-        2. Find the taxi distance for each of those new points
-        3. Choose the coordinate with the least taxi distance
-        4. Add that coordinate to the array
-        5. Repeat
+    You define the prime numbers that comprise your three dimensions for growth.
+    Each pitch in the crystal is defined by a three-value coordinate that 
+    represents the exponents applied to each of those dimensions.
+    1. Generate potential new coordinates
+    2. Find the potential coordinate that has the shortest "manhattan" distance
+        and which doesn't already exist in the crystal. Add it to the crystal
+    To get frequency of a coordinate: apply the coordinate values to the
+    dimension values as exponents, then multiply those results together and
+    take log2. Multiply that result by the fundamental frequency.
 */
+// TODO: troubleshoot this using  dimensions == 1
+
 public class TCrystal  {
     // -- Variables
     [2.0, 3.0, 5.0] @=> float dim[]; // pitch dimensions of cube (separate from
@@ -23,69 +23,46 @@ public class TCrystal  {
     1.0 => float mutateVar; 
     0::ms => dur pulseRate;
     3 => int dimensions; // number of dimensions that we care about
+    200 => float baseFreq;
 
     // -- CRYSTAL
-    float crystalArray[1][3]; // store [dimension][node coordinates]
+    float crystalArray[1][dimensions]; // store [dimension][node coordinates]
         
-        // -- FUNCTIONS
-    fun void run() {
-        spork ~ autoGrow(); // just keep growing!
-        //spork ~ autoMutate();
-        spork ~ autoNormalize();
-    }
-
-    fun void autoGrow() {
-        // container that loops grow function infinitely for sporking
-        while ( true ) {
-            grow(); 
-            pulseRate => now;
-            if ( crystalArray.cap() > 100 ) {
-                reset();
-            } 
+    // -- FUNCTIONS
+    fun void init( float mVar, dur pR, float d[], int numD, float bFreq ) {
+        mVar => mutateVar;
+        pR => pulseRate;
+        d @=> dim;
+        numD => dimensions;
+        bFreq => baseFreq;
+        new float[1][dimensions] @=> crystalArray;
+        
+        "Crystal created with:\n" => string msg;
+        "\tMutation Var: " + mutateVar +=> msg;
+        "\tPulse Rate: " + (pulseRate / ms) +=> msg;
+        "\t# of dimensions: " + dimensions +=> msg;
+        "\tDimensions: " +=> msg;
+        for ( 0 => int i; i < dim.cap(); i++ ) {
+            dim[i] + ", " +=> msg;
         }
+        "\n\tBase Frequency: " + baseFreq +=> msg;
+        <<< msg >>>;
     }
-    /*
-    fun void autoMutate() {
-            // container to loop mutation listener/mutater
-            while( true ) {
-
-                    if ( usListen ) {
-                            // if the ultrasonics pick something up
-                            //      do a mutation
-                            spork ~ mutate();
-                    }
-            }
-    }
-    */
-    fun void autoNormalize() {
-            // container to loop normalizer
-            while( true ) {
-                    normalize();
-            }               
-    }
-
-   fun void mutate() {
-        // mutate the various variables
-        Math.random2( 0, 2) => int choice;
         
-        if ( choice == 0 ) { 
-            Math.random2f(1.0, 10.0) => mutateVar;
-        } else if ( choice == 1 ) {
-            Math.random2( 1, 3 ) => dimensions; 
-        } else if ( choice == 2 ) {
-            Math.random2f(0, 20)::ms => pulseRate; 
-        }
-    }
+    fun float lastNote( int print ) {
+        // Grow the crystal by a node and then
+        // access a freq value of the last-added node in crystal
+        float result;
+        crystalArray.cap() - 1 => int lastInd;
 
-    fun void normalize() {
-    // gradually move back to a normal state
-    }
+        grow( print );
+        pulseRate => now;
+        getFreq( crystalArray[lastInd] ) => result;
 
-    fun float freqStream() {
-        
+        return result;
     } 
 
-    fun void grow() {
+    fun void grow(int print) {
         // Add a new node to the crystal
         float node[dimensions];
         999999999999.0 => float distance;
@@ -126,15 +103,15 @@ public class TCrystal  {
         }
         
         // print the crystal
-        printCrystal();
+        if ( print == 1 ) {
+            printCrystal();
+        }
     }
     
     fun float hDist( float newCoord[] ) {
-        1 => float totSum; // distance of new point to each existing
-                                // point
+        1 => float totSum; // distance of new point to each existing point
 
-        float tempSum[dimensions]; // distance of new point to a single 
-                            // existing point 
+        float tempSum[dimensions]; // distance of new point to a single existing point 
 
         // Cycle through each existing point in crystal 
         for ( 0 => int i; i < crystalArray.cap(); i++ ) {
@@ -156,12 +133,11 @@ public class TCrystal  {
 
         // return the total distance of this node       
         return totSum;
-    }
-                                                        
+    }                                           
        
     fun void addNode() {
         // add blank node to the crystal array: create longer copy
-        new float[ crystalArray.cap() + 1 ][3] @=> float tempArr[][];
+        new float[ crystalArray.cap() + 1 ][dimensions] @=> float tempArr[][];
                 
         for ( 0 => int i; i < crystalArray.cap(); i++ ) {
             for ( 0 => int j; j < crystalArray[i].cap(); j++ ) {
@@ -177,7 +153,7 @@ public class TCrystal  {
     fun int doesExist( float node[] ) {
         // Loop through each node in crystal and check each of it's
         //  coords against the input node. There is a match if the
-        //  match sum == 3.
+        //  match sum == #dimensions.
         0 => int testSum;
         0 => int check;
         for ( 0 => int i; i < crystalArray.cap(); i++ ) {
@@ -212,9 +188,19 @@ public class TCrystal  {
         return result; 
     } 
     
+    fun float getFreq( float node[] ) {
+        // use this function in "main" program function
+        1 => float sum;
+        for ( 0 => int i; i < node.cap(); i++ ) {
+            Math.pow( dim[i], node[i] ) * sum => sum;
+            //<<< "sum: ", sum >>>;
+        }
+        return Math.fabs( sum * baseFreq );
+    }
+
     fun void reset() {
         // reset the crystal
-        new float[1][3] @=> crystalArray; 
+        new float[1][dimensions] @=> crystalArray; 
     }
 
     fun void printCrystal() {
@@ -251,5 +237,3 @@ public class TCrystal  {
         <<< print >>>;
     }
 }
-
-
