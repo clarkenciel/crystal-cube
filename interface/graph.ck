@@ -2,16 +2,17 @@ private class Node {
     int id;
     int coords[2];
     int connections[0];
-    int marked;
+    0 => int marked;
 
     fun void init( int aid, int acoords[] ){
         aid => id;
         acoords @=> coords;
+        <<< "initializing node",id,"with coordinates:",coords[0],",",coords[1] >>>;
     }
 
-    fun void connect( int id ) {
-        connections << id;
-        <<< "connecting", this.id, "to", id >>>;
+    fun void connect( int aid ) {
+        connections << aid;
+        <<< "connecting", id, "to", aid >>>;
     }
 
     fun int[] getConn() {
@@ -19,6 +20,7 @@ private class Node {
     }
 
     fun void mark() {
+        <<<"marking:", id>>>;
         1 => marked;
     }
 
@@ -28,13 +30,13 @@ private class Node {
 }
 
 public class Graph {
-    int id;
+    int gid;
     Node nodes[0];
     Node queue[0];
     int paths[0][0];
 
     fun void init( int numNodes, int aid ) {
-        aid => id;
+        aid => gid;
         new Node[numNodes] @=> nodes;
         new int[numNodes][0] @=> paths;
     }
@@ -43,11 +45,12 @@ public class Graph {
         return nodes[ n ];
     }
 
-    fun void addNode( Node n ){
-        nodes << n;
+    fun void addNode( Node n, int loc ){
+        <<< "adding node",n.id,"to graph",gid >>>;
+        n @=> nodes[loc];
     }
 
-    fun int[][] bfs( Node n ) {
+    fun void bfs( Node n ) {
         if ( queue.cap() == 0 ) {
             queue << n;
         }
@@ -60,27 +63,47 @@ public class Graph {
         for ( 0 => int i; i < adj.cap(); i++ ) {
             <<< "finding adjacent nodes" >>>;
             if ( nodes[adj[i]].marked == 0 ) {
-                <<< "adding node: ", adj[i] >>>;
+                <<< "adding node: ", adj[i], nodes[adj[i]].id >>>;
                 queue << nodes[adj[i]];
-                paths[i] << n.id; // add self to the path to each adjacency
+                paths[adj[i]] << n.id; // add self to the path to each adjacency
                 1 => check;
             }
         }
         
         // remove this node from queue
-        Node nuQ[0];
+        Node nuQ[queue.cap() - 1];
         for ( 1 => int i; i < queue.cap(); i++ ) {
-            nuQ << queue[i];
+            <<< i >>>;
+            queue[i] @=> nuQ[i-1];
         }
-        new Node[ nuQ.cap() ] @=> queue;
-        for ( 0 => int i; i < nuQ.cap(); i++ ) {
-            queue << nuQ[i];
-        }
+        <<< "queue before" >>>;
+        printNodes( queue );
 
-        this.bfs( queue[0] ); // do bs for the next item in the queue
+        new Node[nuQ.cap()] @=> queue;
+        for ( 0 => int i; i < nuQ.cap(); i++ ) {
+            nuQ[i] @=> queue[i]; 
+        }
+        <<< "queue after" >>>;
+        printNodes( queue );
+
+        <<< "\n Paths:">>>;
+        for ( 0 => int i; i < paths.cap(); i++ ) {
+            for ( 0 => int j; j < paths[i].cap(); j++ ){
+                <<< paths[i][j] >>>;
+            }
+        }
+        <<< "\n" >>>;
+        bfs( queue[0] ); // do bs for the next item in the queue
     }
 
-
+    fun void printNodes( Node a[] ){
+        "[" => string print;
+        for ( 0 => int i; i < a.cap(); i++ ){
+            " " + a[i].id + "," +=> print;
+        }
+        " ]" +=> print;
+        <<< print, "\n">>>;
+    }
 }
 
 Graph g;
@@ -89,8 +112,8 @@ Node n[3];
 
 for ( 0 => int i; i < 3; i++ ) {
     n[i].init( i, [i % 3, i % 10] );
-    g.addNode( n[i] );
-    g.nodes[i].connect( 2-i );
+    g.addNode( n[i],i );
+    g.nodes[i].connect( Math.random2(0, 3) );
 }
 
 g.bfs( g.nodes[0] );
