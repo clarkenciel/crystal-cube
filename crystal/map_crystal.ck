@@ -51,10 +51,12 @@ public class MapCrystal {
    fun void getCoords() {
         // create list of arudino coordinates
         // [ arduino column, order in column ]
+        float j;
         for ( 0 => int i; i < coords.cap(); i++ ) {
-            for ( 0 => int j; j < 3; j++ ){
-                coords << [i % 9, j];
-            }
+            Math.floor( i / 9 ) => j;
+
+            i % 9 @=> coords[i][0];
+            j $ int @=> coords[i][1];
         }
    }
 
@@ -66,15 +68,15 @@ public class MapCrystal {
         for ( 0 => int i; i < 27; i ++ ) {
             // for each node, create an id and give it connections
             i => id;
-            new int[0] @=> conn;
+            conn.clear();
 
-            if ( (i + 1) % 3 > 0 ) {
+            if ( (i + 1) % 3 > 0 && i + 3 < 27  ) {
                 conn << i + 1;
             }
-            if ( (i + 3) % 9 > 0 ) {
+            if ( (i + 3) % 9 > 0 && i + 9 < 27 ) {
                 conn << i + 3;
             }
-            if ( (i + 9) % 27 > 0) {
+            if ( (i + 9) < 27 ) {
                 conn << i + 9;
             }
         
@@ -88,35 +90,41 @@ public class MapCrystal {
         nodes[nId].addNeighbors( nConn );
     }
 
-    fun void pulse( Node n ) {
+    fun void pulse( int id ) {
         // BFS of the array
         Node neighbor;
+        nodes[id] @=> Node n;
 
-        n.mark(); // mark node as visited
+        nodes[id].mark(); // mark node as visited
+        
+        // safety for first run
+        if ( queue.cap() < 1 ) {
+            queue << n;
+        }
 
         // put unvisited neighbors on queue
         for ( 0 => int i; i < n.neighbors.cap(); i++ ) {
-            nodes[ n.neighbors[i] ] @=> neighbor; 
-            if ( neighbor.marked == 0 ) {
-                queue << nodes[ neighbor.id ];
+            if ( nodes[ n.neighbors[i] ].marked == 0 && isIn( nodes[n.neighbors[i]].id, queue ) == 0 ) {
+                queue << nodes[ nodes[ n.neighbors[i] ].id ];
             }
         }
 
         // remove this node from queue
         Node nuQ[ queue.cap() - 1];
         for ( 1 => int i; i < queue.cap(); i++ ) {
-            queue[i] @=> nuQ[i];
+            queue[i] @=> nuQ[i-1];
         }
 
-        new Node[ nuQ.cap() ] @=> queue;
+        //new Node[ nuQ.cap() ] @=> queue;
+        queue.popBack(); // removes last item in array, thus reducing size of queue
         for ( 0 => int i; i < nuQ.cap(); i++ ) {
             nuQ[i] @=> queue[i];
         }
 
-        
+        printNodes( queue); 
         // if queue has members, pulse recursively
         if ( queue.cap() > 0 ) {
-            pulse( queue[0] );
+            pulse( queue[0].id );
         } else {
             unmarkNodes(); // or, reset the nodes
         }
@@ -128,6 +136,18 @@ public class MapCrystal {
         for ( 0 => int i; i < nodes.cap(); i++ ) {
             nodes[i].unMark();
         }
+    }
+
+    fun int isIn( int n, Node a[] ){
+        // check if val is in array (JUST FOR QUEUE)
+        0 => int check;
+
+        for ( 0 => int i; i < a.cap(); i++ ) {
+            if ( n == a[i].id ) {
+                1 => check;
+            }
+        }
+        return check;
     }
 
     fun void printNodes( Node a[] ){
@@ -166,3 +186,4 @@ public class MapCrystal {
 //------------TESTS----------------
 MapCrystal m;
 m.init();
+m.pulse( 0 );
