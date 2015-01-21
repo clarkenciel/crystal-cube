@@ -72,12 +72,15 @@ public class MapCrystal {
 
             if ( (i + 1) % 3 > 0 && i + 3 < 27  ) {
                 conn << i + 1;
+                nodes[i + 1].neighbors << id;
             }
             if ( (i + 3) % 9 > 0 && i + 9 < 27 ) {
                 conn << i + 3;
+                nodes[i + 3].neighbors << id;
             }
             if ( (i + 9) < 27 ) {
                 conn << i + 9;
+                nodes[i + 9].neighbors << id;
             }
         
             addNode( id, conn, coords[i] );
@@ -121,7 +124,7 @@ public class MapCrystal {
             nuQ[i] @=> queue[i];
         }
 
-        printNodes( queue); 
+        //printNodes( queue); 
         // if queue has members, pulse recursively
         if ( queue.cap() > 0 ) {
             pulse( queue[0].id );
@@ -186,4 +189,8 @@ public class MapCrystal {
 //------------TESTS----------------
 MapCrystal m;
 m.init();
-m.pulse( 0 );
+for ( 0 => int i; i < 27; i ++ ) {
+    <<< "new pulse" >>>;
+    m.pulse( i );
+    second => now;
+}
