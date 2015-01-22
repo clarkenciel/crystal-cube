@@ -22,7 +22,7 @@ private class Node {
     }
 
     fun void mark() {
-        <<<"marking:", id>>>;
+        <<< "\t\t\t\t\t\t\tMARKING NODE:",id >>>;
         1 => marked;
         // something to turn on an arduino here
     }
@@ -38,6 +38,8 @@ public class MapCrystal {
    int coords[27][2];
    Node nodes[27];
    Node queue[0];
+   TCrystal tc;
+   // some code here using Port.ck
 
    fun void init() {
         // initialize nodes
@@ -93,7 +95,13 @@ public class MapCrystal {
         nodes[nId].addNeighbors( nConn );
     }
 
-    fun void pulse( int id ) {
+    fun void pulse( 
+        int id, 
+        dur pause,
+        float mutater, 
+        float dimensions[],
+        int numDimensions,
+        float baseFreq ) {
         // BFS of the array
         Node neighbor;
         nodes[id] @=> Node n;
@@ -101,9 +109,17 @@ public class MapCrystal {
         nodes[id].mark(); // mark node as visited
         
         // safety for first run
+        // also, init tenney crystal
         if ( queue.cap() < 1 ) {
             queue << n;
+            tc.init( mutater, dimensions, numDimensions, baseFreq ); 
         }
+
+        // grow the crystal by one step and send the frequency
+        //nodes[id].play( tc.lastNote(1) );
+        tc.lastNote(0) => float nFreq;
+        <<< nFreq >>>;
+        
 
         // put unvisited neighbors on queue
         for ( 0 => int i; i < n.neighbors.cap(); i++ ) {
@@ -127,7 +143,8 @@ public class MapCrystal {
         //printNodes( queue); 
         // if queue has members, pulse recursively
         if ( queue.cap() > 0 ) {
-            pulse( queue[0].id );
+            pause => now; // wait
+            pulse( queue[0].id, pause, mutater, dimensions, numDimensions, baseFreq );
         } else {
             unmarkNodes(); // or, reset the nodes
         }
@@ -187,10 +204,11 @@ public class MapCrystal {
 
 
 //------------TESTS----------------
+/*
 MapCrystal m;
 m.init();
 for ( 0 => int i; i < 27; i ++ ) {
     <<< "new pulse" >>>;
     m.pulse( i );
     second => now;
-}
+}*/

@@ -21,7 +21,6 @@ public class TCrystal  {
     [2.0, 3.0, 5.0] @=> float dim[]; // pitch dimensions of cube (separate from
                         //      geometric dimensions)
     1.0 => float mutateVar; 
-    0::ms => dur pulseRate;
     3 => int dimensions; // number of dimensions that we care about
     200 => float baseFreq;
 
@@ -29,9 +28,8 @@ public class TCrystal  {
     float crystalArray[1][dimensions]; // store [dimension][node coordinates]
         
     // -- FUNCTIONS
-    fun void init( float mVar, dur pR, float d[], int numD, float bFreq ) {
+    fun void init( float mVar, float d[], int numD, float bFreq ) {
         mVar => mutateVar;
-        pR => pulseRate;
         d @=> dim;
         numD => dimensions;
         bFreq => baseFreq;
@@ -39,7 +37,6 @@ public class TCrystal  {
         
         "Crystal created with:\n" => string msg;
         "\tMutation Var: " + mutateVar +=> msg;
-        "\tPulse Rate: " + (pulseRate / ms) +=> msg;
         "\t# of dimensions: " + dimensions +=> msg;
         "\tDimensions: " +=> msg;
         for ( 0 => int i; i < dim.cap(); i++ ) {
@@ -56,9 +53,13 @@ public class TCrystal  {
         crystalArray.cap() - 1 => int lastInd;
 
         grow( print );
-        pulseRate => now;
         getFreq( crystalArray[lastInd] ) => result;
-
+        while ( result > 1000 ){
+            2 /=> result;
+        }
+        while( result < 100 ) {
+            2 *=> result;
+        }
         return result;
     } 
 
@@ -193,7 +194,6 @@ public class TCrystal  {
         1 => float sum;
         for ( 0 => int i; i < node.cap(); i++ ) {
             Math.pow( dim[i], node[i] ) * sum => sum;
-            //<<< "sum: ", sum >>>;
         }
         return Math.fabs( sum * baseFreq );
     }
