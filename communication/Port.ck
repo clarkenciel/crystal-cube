@@ -1,6 +1,12 @@
 // Port.ck
+
 // Eric Heep
-// communicates with the Arduinos, pairs them up with the ports
+// Matches serial ports with their Arduino IDs 
+// receives ultrasonic sensor values and sends piezo 
+// phase increment values,
+
+// Created for the Crystal Cube installation in 
+// collaboration with Danny Clarke
 // CalArts Music Tech // MTIID4LIFE
 
 public class Port { 
@@ -16,7 +22,7 @@ public class Port {
     int sensor[9];
     
     // arduino sampling rate
-    int arduino_sr;
+    float arduino_sr;
     arduinoSamplingRate(15625);
 
     // exponential multiplier for sending serial
@@ -35,7 +41,7 @@ public class Port {
     } 
 
     // sets arduino sampling rate
-    fun void arduinoSamplingRate(int asr) {
+    fun void arduinoSamplingRate(float asr) {
         asr => arduino_sr;
     }
 
@@ -146,17 +152,21 @@ public class Port {
     }
 }
 
+/*
 Port p;
 p.init();
 
 //spork ~ p.receive(0);
+10::ms => dur cycle;
+1000::ms => dur len;
+float inc;
 
+[49, 51, 53, 54, 56, 58, 60, 61] @=> int note[];
+1::second => now;
+p.note(1, 0, 440);
+p.note(1, 1, 550);
+p.note(1, 2, 660);
 while (true) {  
-    p.note(3, 0, 440);
-    p.note(3, 1, 660);
-    p.note(3, 2, 880);
-    p.note(3, 3, 1100);
-    p.note(3, 4, 1320);
-    1.0::second => now;
-
+    1::second => now;
 }
+*/

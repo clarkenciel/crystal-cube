@@ -1,17 +1,20 @@
-// chuck_to_piezo.ino
+// chuck_to_piezo_redux.ino
 
 // Eric Heep
 // recieves messages from ChucK to simultaneously 
 // control multiple piezo speakers, created for the
 // Crystal Cube installation in collaboration with Danny Clarke
 
+// includes FlixiTimer2 library
+#include <FlexiTimer2.h>
+
 // ID number of the arduino, each robot must have a different one
-#define arduinoID 1
+#define arduinoID 2
 #define PIN_DDR DDRB
 #define PIN_PORT PORTB
 
 // only reliable for up to 5 piezos at a time
-#define NUM_PIEZOS 3
+#define NUM_PIEZOS 1
 
 // communication variables
 byte handshake;
@@ -41,29 +44,41 @@ void setup() {
   Serial.begin(57600);
 
   // readying piezos pins
-  PIN_DDR |= (1 << DDB0)|(1 << DDB1)|(1 << DDB2)|(1 << DDB3)|(1 << DDB4)|(1 << DDB5);
+  PIN_DDR |= (1 << DDB0);//|(1 << DDB1)|(1 << DDB2)|(1 << DDB3)|(1 << DDB4)|(1 << DDB5);
+  
+  //FlexiTimer2::set(1, 1.0/1000, serial);
+  //FlexiTimer2::start();
+  
+  phase_inc[0] = (440.0/10000) * two_pi;
+  //phase_inc[1] = (440.0/50000) * two_pi;
+  //phase_inc[2] = (440.0/50000) * two_pi;
+  //phase_inc[3] = (440.0/50000) * two_pi;
+  
+  /*
   // halts interrupts, disabled
-  //cli();
-  TCCR0A = 0;
-  TCCR0B = 0;
-  TCNT0  = 0;
+  // cli();
+  TCCR1A = 0;
+  TCCR1B = 0;
+  TCNT1  = 0;
   // set compare match register for 15.625khz increments
-  OCR0A = 1;
+  OCR1A = 1;
   // turn on CTC mode
-  TCCR0A |= (1 << WGM21);
-  //TCCR1B |= (1 << WGM12);
-  //TCCR2A |= (1 << WGM2);
+  //TCCR0A |= (1 << WGM21);
+  TCCR1B |= (1 << WGM12);
+  //TCCR2A |= (1 << WGM01);
 
   // Set CS12 and CS10 bit for 1024 prescaler
-  TCCR0B |= (1 << CS12) | (1 << CS10);  
+  TCCR1B |= (1 << CS12) | (1 << CS10);  
   // enable timer compare interrupt
-  TIMSK0 |= (1 << OCIE0A);
+  TIMSK1 |= (1 << OCIE0A);
   // allows interrupts
   sei();
+  */
 }
 
+/*
 // loops at 15625hz
-ISR(TIMER0_COMPA_vect){
+ISR(TIMER1_COMPA_vect){
   // resets pin map
   pin_map = 0;
 
@@ -72,12 +87,13 @@ ISR(TIMER0_COMPA_vect){
     phase[i] += phase_inc[i];
 
     // sets individual piezo on the pin map
-    if (phase[i] <= pi) {
-      pin_map |= 1 << i;
+    if (phase[i] <= pi && phase_inc[i] != 0.0) {
+      //pin_map = pin_map | 1 << (i + 3);
+      pin_map = PIN_PORT | 1 << (i + 1);
     }
-    else {
-      pin_map &= 0 << i;
-    }
+    //else {
+      //pin_map = PIN_PORT | 0 << (i + 3);
+    //}
 
     // wraps if above two pi
     if (phase[i] >= two_pi) {
@@ -87,6 +103,7 @@ ISR(TIMER0_COMPA_vect){
   // sets pin map
   PIN_PORT = pin_map;
 }
+*/
 
 // receives bytes from ChucK for unpacking
 void recieveBytes() {
@@ -119,11 +136,35 @@ void sendID() {
 }
 
 // loop
-void loop() {
+void serial() {
   if (Serial.available() && handshake == 1) {
     recieveBytes();
   }
   else if (Serial.available() && handshake == 0) {
     sendID();
   }
+}
+
+void loop() {
+  // cycles through piezos
+  for (int i = 0; i < NUM_PIEZOS; i++) {
+    phase[i] += phase_inc[i];
+
+    // sets individual piezo on the pin map
+    if (phase[i] <= pi) {
+      //pin_map = pin_map | 1 << (i + 3);
+      pin_map |= 1 << i;
+    }
+    else {
+      pin_map &= 0 << i;
+    }
+
+    // wraps if above two pi
+    if (phase[i] >= two_pi) {
+      phase[i] -= two_pi; 
+    }
+  }
+  // sets pin map
+  PIN_PORT = pin_map;
+  delayMicroseconds(100);
 }

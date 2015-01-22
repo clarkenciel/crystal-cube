@@ -1,8 +1,9 @@
 // ultrasonic_to_chuck.ion
 
 // Eric Heep
-// sends analog sensor messages to ChucK,
-// created for the Crystal Cube installation
+// Sends analog sensor messages to ChucK
+
+// Created for the Crystal Cube installation
 // in collaboration with Danny Clarke
 // CalArts Music Tech // MTIID4LIFE
 
