@@ -152,7 +152,7 @@ public class Port {
     }
 }
 
-/*
+
 Port p;
 p.init();
 
@@ -169,4 +169,4 @@ p.note(1, 2, 660);
 while (true) {  
     1::second => now;
 }
-*/
+

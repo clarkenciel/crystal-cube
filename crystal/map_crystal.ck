@@ -8,6 +8,7 @@ private class Node {
         aid => id;
         acoords @=> coords;
         <<< "initializing node",id,"with coordinates:",coords[0],",",coords[1] >>>;
+        
     }
 
     fun void addNeighbors( int n[] ) {
@@ -39,6 +40,7 @@ public class MapCrystal {
    Node nodes[27];
    Node queue[0];
    TCrystal tc;
+   Port port;
    // some code here using Port.ck
 
    fun void init() {
@@ -119,6 +121,7 @@ public class MapCrystal {
         //nodes[id].play( tc.lastNote(1) );
         tc.lastNote(0) => float nFreq;
         <<< nFreq >>>;
+        port.note( nodes[id].coords[0], nodes[id].coords[1],nFreq);
         
 
         // put unvisited neighbors on queue
