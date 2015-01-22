@@ -158,6 +158,7 @@ public class MapCrystal {
         // unmark all nodes in crystal
         for ( 0 => int i; i < nodes.cap(); i++ ) {
             nodes[i].unMark();
+            port.note(nodes[i].coords[0], nodes[i].coords[1], 0);
         }
     }
 
