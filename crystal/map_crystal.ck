@@ -106,7 +106,9 @@ public class MapCrystal {
         float mutater, 
         float dimensions[],
         int numDimensions,
-        float baseFreq ) {
+        float baseFreq,
+        float glisser) {
+
         // BFS of the array
         Node neighbor;
         nodes[id] @=> Node n;
@@ -122,7 +124,7 @@ public class MapCrystal {
 
         // grow the crystal by one step and send the frequency
         //nodes[id].play( tc.lastNote(1) );
-        tc.lastNote(0) => float nFreq;
+        tc.lastNote(0) + glisser => float nFreq;
         <<< nFreq >>>;
         <<< "port coords: [",nodes[id].coords[0],",",nodes[id].coords[1],"]">>>;
         port.note( nodes[id].coords[0], nodes[id].coords[1],nFreq);
@@ -151,7 +153,7 @@ public class MapCrystal {
         // if queue has members, pulse recursively
         if ( queue.cap() > 0 ) {
             pause => now; // wait
-            pulse( queue[0].id, pause, mutater, dimensions, numDimensions, baseFreq );
+            pulse( queue[0].id, pause, mutater, dimensions, numDimensions, baseFreq, glisser);
         } else {
             unmarkNodes(); // or, reset the nodes
         }
