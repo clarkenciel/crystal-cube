@@ -1,12 +1,15 @@
-TCrystal tc;
+MapCrystal mc;
+mc.init();
+1000::ms => dur pulse;
+0.0 => float note;
 
-//<<< tc.hDist([0.0, 1.0]) >>>;
-spork ~ tc.autoGrow();
-
-for ( 0 => int i; i < 300; i ++ ) {
-    if ( i%4 == 3 ) {
-        tc.mutate();
-    }
-    1::ms => now;
+for ( 1 => int i; i < 10000; i++ ) {
+    mc.pulse(
+        0,
+        500::ms,
+        1.0,
+        [2.0, 3.0, 5.0],
+        3,
+        500.0
+    );
 }
-
