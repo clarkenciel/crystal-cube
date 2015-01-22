@@ -54,7 +54,7 @@ public class TCrystal  {
 
         grow( print );
         getFreq( crystalArray[lastInd] ) => result;
-        while ( result > 1000 ){
+        while ( result > 1680 ){
             2 /=> result;
         }
         while( result < 100 ) {
