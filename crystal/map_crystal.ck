@@ -50,6 +50,9 @@ public class MapCrystal {
 
         printNodes( nodes );
         printInts( coords );
+
+        port.init();
+        2::second => now;
    }
 
    fun void getCoords() {
@@ -121,6 +124,7 @@ public class MapCrystal {
         //nodes[id].play( tc.lastNote(1) );
         tc.lastNote(0) => float nFreq;
         <<< nFreq >>>;
+        <<< "port coords: [",nodes[id].coords[0],",",nodes[id].coords[1],"]">>>;
         port.note( nodes[id].coords[0], nodes[id].coords[1],nFreq);
         
 
