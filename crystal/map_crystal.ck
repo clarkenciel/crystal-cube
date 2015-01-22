@@ -35,12 +35,13 @@ private class Node {
 }
 
 public class MapCrystal {
+    Port p;
+    p.init();
    
    int coords[27][2];
    Node nodes[27];
    Node queue[0];
    TCrystal tc;
-   Port port;
    // some code here using Port.ck
 
    fun void init() {
@@ -103,7 +104,8 @@ public class MapCrystal {
         float mutater, 
         float dimensions[],
         int numDimensions,
-        float baseFreq ) {
+        float baseFreq,
+        float glisser) {
         // BFS of the array
         Node neighbor;
         nodes[id] @=> Node n;
@@ -118,10 +120,10 @@ public class MapCrystal {
         }
 
         // grow the crystal by one step and send the frequency
-        //nodes[id].play( tc.lastNote(1) );
         tc.lastNote(0) => float nFreq;
+        glisser +=> nFreq;
         <<< nFreq >>>;
-        port.note( nodes[id].coords[0], nodes[id].coords[1],nFreq);
+        p.note( nodes[id].coords[0] + 1, nodes[id].coords[1],nFreq);
         
 
         // put unvisited neighbors on queue
@@ -147,7 +149,7 @@ public class MapCrystal {
         // if queue has members, pulse recursively
         if ( queue.cap() > 0 ) {
             pause => now; // wait
-            pulse( queue[0].id, pause, mutater, dimensions, numDimensions, baseFreq );
+            pulse( queue[0].id, pause, mutater, dimensions, numDimensions, baseFreq, glisser);
         } else {
             unmarkNodes(); // or, reset the nodes
         }
@@ -158,6 +160,7 @@ public class MapCrystal {
         // unmark all nodes in crystal
         for ( 0 => int i; i < nodes.cap(); i++ ) {
             nodes[i].unMark();
+            p.note( nodes[i].coords[0] + 1, nodes[i].coords[1], 0 );
         }
     }
 

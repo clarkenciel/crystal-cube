@@ -6,7 +6,7 @@
 // Crystal Cube installation in collaboration with Danny Clarke
 
 // ID number of the arduino, each robot must have a different one
-#define arduinoID 1
+#define arduinoID 9
 #define PIN_DDR DDRB
 #define PIN_PORT PORTB
 
