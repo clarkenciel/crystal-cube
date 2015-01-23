@@ -42,7 +42,6 @@ public class MapCrystal {
    Node nodes[27];
    Node queue[0];
    TCrystal tc;
-   // some code here using Port.ck
 
    fun void init() {
         // initialize nodes
