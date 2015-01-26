@@ -4,10 +4,13 @@ private class Node {
     int neighbors[0];
     0 => int marked;
 
+    OscOut out;
+    out.dest( "localhost", 7000 );
+
     fun void init( int aid, int acoords[] ){
         aid => id;
         acoords @=> coords;
-        <<< "initializing node",id,"with coordinates:",coords[0],",",coords[1] >>>;
+        //<<< "initializing node",id,"with coordinates:",coords[0],",",coords[1] >>>;
         
     }
 
@@ -25,11 +28,18 @@ private class Node {
     fun void mark() {
         <<< "\t\t\t\t\t\t\tMARKING NODE:",id >>>;
         1 => marked;
+
+        out.start( "/nodes/" + "0" + id + ", i" );
+        1 => out.add;
+        out.send();
         // something to turn on an arduino here
     }
 
     fun void unMark() {
         0 => marked;
+        out.start( "/nodes/" + "0" + id + ", i" );
+        0 => out.add;
+        out.send();
         // something to turn off an arudino here
     }
 }
@@ -43,6 +53,7 @@ public class MapCrystal {
    Port port;
    // some code here using Port.ck
 
+   // -----------------------SETUP---------------------
    fun void init() {
         // initialize nodes
         getCoords();
@@ -70,18 +81,18 @@ public class MapCrystal {
    fun void drawGraph() {
         // create computer representation of arduino array connections
         int id;
-        int conn[0];
+        int conn[3];
         
         for ( 0 => int i; i < 27; i ++ ) {
             // for each node, create an id and give it connections
             i => id;
             conn.clear();
 
-            if ( (i + 1) % 3 > 0 && i + 3 < 27  ) {
+            if ( (i + 1) % 3 > 0 && i + 1 < 27  ) {
                 conn << i + 1;
                 nodes[i + 1].neighbors << id;
             }
-            if ( (i + 3) % 9 > 0 && i + 9 < 27 ) {
+            if ( (i + 3) % 9 > 0 && i + 3 < 27 ) {
                 conn << i + 3;
                 nodes[i + 3].neighbors << id;
             }
@@ -89,6 +100,8 @@ public class MapCrystal {
                 conn << i + 9;
                 nodes[i + 9].neighbors << id;
             }
+
+            <<< "giving node"+id+"neighbors"+(i+1)+(i+3)+(i+9) >>>;
         
             addNode( id, conn, coords[i] );
         }
@@ -100,6 +113,7 @@ public class MapCrystal {
         nodes[nId].addNeighbors( nConn );
     }
 
+    // ---------------------SOUND PATTERNS----------------
     fun void pulse( 
         int id, 
         dur pause,
@@ -108,6 +122,7 @@ public class MapCrystal {
         int numDimensions,
         float baseFreq,
         float glisser) {
+        <<< "\t\t\t\tBFS Starting @:"+id >>>;
 
         // BFS of the array
         Node neighbor;
@@ -143,13 +158,11 @@ public class MapCrystal {
             queue[i] @=> nuQ[i-1];
         }
 
-        //new Node[ nuQ.cap() ] @=> queue;
         queue.popBack(); // removes last item in array, thus reducing size of queue
         for ( 0 => int i; i < nuQ.cap(); i++ ) {
             nuQ[i] @=> queue[i];
         }
 
-        //printNodes( queue); 
         // if queue has members, pulse recursively
         if ( queue.cap() > 0 ) {
             pause => now; // wait
@@ -159,6 +172,22 @@ public class MapCrystal {
         }
                 
     }
+
+    fun void inOrder( int startId, int dir, dur pulse ) {
+        <<< "\t\t\tIn-order search starting @:" + startId >>>;
+        int place;
+
+        for( startId => int i; i < nodes.cap(); dir +=> i ) {
+            ( startId + i) % 27 => place;
+            nodes[ place ].mark();
+            if( nodes[ (place + 25) % 27 ].marked == 1 ) {
+                nodes[ (place + 25) % 27 ].unMark();
+            }
+            pulse => now;
+        }
+    }
+
+    // ------------------------SUPPORT FUNCS-----------------
 
     fun void unmarkNodes() {
         // unmark all nodes in crystal
