@@ -59,8 +59,8 @@ public class MapCrystal {
         getCoords();
         drawGraph();
 
-        printNodes( nodes );
-        printInts( coords );
+        //printNodes( nodes );
+        //printInts( coords );
 
         port.init();
         2::second => now;
@@ -101,7 +101,7 @@ public class MapCrystal {
                 nodes[i + 9].neighbors << id;
             }
 
-            <<< "giving node"+id+"neighbors"+(i+1)+(i+3)+(i+9) >>>;
+            //<<< "giving node"+id+"neighbors"+(i+1)+(i+3)+(i+9) >>>;
         
             addNode( id, conn, coords[i] );
         }
@@ -122,7 +122,7 @@ public class MapCrystal {
         int numDimensions,
         float baseFreq,
         float glisser) {
-        <<< "\t\t\t\tBFS Starting @:"+id >>>;
+        //<<< "\t\t\t\tBFS Starting @:"+id >>>;
 
         // BFS of the array
         Node neighbor;
@@ -141,7 +141,7 @@ public class MapCrystal {
         //nodes[id].play( tc.lastNote(1) );
         tc.lastNote(0) + glisser => float nFreq;
         <<< nFreq >>>;
-        <<< "port coords: [",nodes[id].coords[0],",",nodes[id].coords[1],"]">>>;
+        //<<< "port coords: [",nodes[id].coords[0],",",nodes[id].coords[1],"]">>>;
         port.note( nodes[id].coords[0], nodes[id].coords[1],nFreq);
         
 
@@ -153,15 +153,16 @@ public class MapCrystal {
         }
 
         // remove this node from queue
-        Node nuQ[ queue.cap() - 1];
-        for ( 1 => int i; i < queue.cap(); i++ ) {
-            queue[i] @=> nuQ[i-1];
+        Node tmp;
+        for ( 0 => int i; i < queue.cap(); i++ ) {
+            if( i + 1 < queue.cap() ) {
+                queue[i] @=> tmp;
+                queue[i+1] @=> queue[i];
+            }
         }
+        queue.size( queue.cap() - 1 );
+        printNodes( queue );
 
-        queue.popBack(); // removes last item in array, thus reducing size of queue
-        for ( 0 => int i; i < nuQ.cap(); i++ ) {
-            nuQ[i] @=> queue[i];
-        }
 
         // if queue has members, pulse recursively
         if ( queue.cap() > 0 ) {

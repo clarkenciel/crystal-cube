@@ -33,7 +33,8 @@ public class TCrystal  {
         d @=> dim;
         numD => dimensions;
         bFreq => baseFreq;
-        new float[1][dimensions] @=> crystalArray;
+        //new float[1][dimensions] @=> crystalArray;
+        crystalArray[0].size(dimensions);
         
         "Crystal created with:\n" => string msg;
         "\tMutation Var: " + mutateVar +=> msg;
@@ -75,22 +76,13 @@ public class TCrystal  {
                 makeNode( crystalArray[i] , j ) @=> node;                    
                 // store the node if it isn't already in crystal and
                 //  is shortest so far
-                //<<< "distance:",distance >>>;
-                //<<< "Node coords:" >>>;
-                //printArr( node );
-                //<<< "node distance:", hDist( node ) >>>;  
 
                 if ( hDist( node ) < distance ) {
                     if ( doesExist( node ) == 0 ) {
                         hDist( node ) => distance; 
                         node @=> store;
-                             
-                        //<<< "new node coords:\n" >>>;
-                        //printArr( store );                    
-                        //<<< "New Node Distance:", hDist( node ), "\n" >>>; 
                     }
                 }
-                //pulseRate => now; 
             }
         }                  
         
@@ -98,8 +90,6 @@ public class TCrystal  {
         if ( store.cap() > 0 ) {
             // Add a new empty node to the crystal
             addNode();
-
-            //<<< "adding store to crystal" >>>;
             store @=> crystalArray[ crystalArray.cap() - 1 ];     
         }
         
@@ -121,13 +111,11 @@ public class TCrystal  {
             for ( 0 => int j; j < dimensions; j++ ){
                     // get difference in each coordinate
                 Math.fabs( newCoord[j] - crystalArray[i][j] ) +=> tempSum[j] ;
-                //<<< "temp sum:", tempSum, "\n\tj:", j >>>;
             }                          
         }
             
         for ( 0 => int i; i < tempSum.cap(); i++ ) {
             Math.pow( dim[i], tempSum[i] ) * totSum => totSum;
-            //<<< "Total Sum:", totSum >>>;
         }
 
         Math.log2( totSum ) => totSum; 
@@ -138,17 +126,9 @@ public class TCrystal  {
        
     fun void addNode() {
         // add blank node to the crystal array: create longer copy
-        new float[ crystalArray.cap() + 1 ][dimensions] @=> float tempArr[][];
-                
-        for ( 0 => int i; i < crystalArray.cap(); i++ ) {
-            for ( 0 => int j; j < crystalArray[i].cap(); j++ ) {
-                crystalArray[i][j] @=> tempArr[i][j];
-            }
-            //<<< "Adding to Crystal:" >>>;
-            //printArr(tempArr[i]);
-        }
-         
-        tempArr @=> crystalArray;
+        
+        crystalArray.size( crystalArray.cap() + 1 ); // increase array size
+        [0.0, 0.0] @=> crystalArray[ crystalArray.cap() - 1 ]; // assign "blank" to last index
     }
 
     fun int doesExist( float node[] ) {
@@ -162,23 +142,19 @@ public class TCrystal  {
             for ( 0 => int j; j < dimensions; j++ ) {
                 if ( node[j] == crystalArray[i][j] ) {
                     testSum++;
-                    //<<< "node:",node[j],"crystal:",crystalArray[i][j] >>>;
-                    //<<< "testSum",testSum>>>;
                 }
             }
             if ( testSum == dimensions ) {
                 1 => check;
             }
         } 
-        //<<< "Check",check >>>;
         return check;
     }
 
     fun float[] makeNode( float node[], int dimension ) {
         // Create a node from an existing node that is expanded
         //  in one dimension 
-        float result[];
-        new float[dimensions] @=> result;
+        float result[ node.cap() ];
         [-1.0, 1.0] @=> float choice[];
 
         for ( 0 => int i; i < node.cap(); i++ ) {
@@ -200,7 +176,11 @@ public class TCrystal  {
 
     fun void reset() {
         // reset the crystal
-        new float[1][dimensions] @=> crystalArray; 
+        //new float[1][dimensions] @=> crystalArray; 
+        crystalArray.size(1);
+        for( 0 => int i; i < crystalArray[0].cap(); i++ ) {
+            0.0 @=> crystalArray[0][i];
+        }
     }
 
     fun void printCrystal() {
