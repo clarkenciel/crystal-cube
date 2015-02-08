@@ -51,7 +51,6 @@ public class MapCrystal {
    Node queue[0];
    TCrystal tc;
    Port port;
-   int unQ[0];
    // some code here using Port.ck
 
    // -----------------------SETUP---------------------
@@ -60,8 +59,8 @@ public class MapCrystal {
         getCoords();
         drawGraph();
 
-        //printNodes( nodes );
-        //printInts( coords );
+        printNodes( nodes );
+        printInts( coords );
 
         port.init();
         2::second => now;
@@ -130,7 +129,6 @@ public class MapCrystal {
         nodes[id] @=> Node n;
 
         nodes[id].mark(); // mark node as visited
-        unQ << id;
         
         // safety for first run
         // also, init tenney crystal
@@ -142,9 +140,10 @@ public class MapCrystal {
         // grow the crystal by one step and send the frequency
         //nodes[id].play( tc.lastNote(1) );
         tc.lastNote(0) + glisser => float nFreq;
-        port.note( nodes[id].coords[0], nodes[id].coords[1],nFreq);
         //<<< nFreq >>>;
         //<<< "port coords: [",nodes[id].coords[0],",",nodes[id].coords[1],"]">>>;
+        port.note( nodes[id].coords[0], nodes[id].coords[1],nFreq);
+        
 
         // put unvisited neighbors on queue
         for ( 0 => int i; i < n.neighbors.cap(); i++ ) {
@@ -183,54 +182,14 @@ public class MapCrystal {
         }
     }
 
-    fun void DFS( int id, 
-        dur pulse, 
-        float mutater,
-        float dimensions[],
-        int numDimensions,
-        float baseFreq ) {
-
-        0 => int check;
-
+    fun void DFS( int id, dur pulse ) {
         nodes[id].mark(); // mark node
-        uQ << id;
-        tc.init( mutater, dimensions, numDimensions, baseFreq ); 
-
-        tc.lastNote(0) + glisser => float nFreq;
-        port.note( nodes[id].coords[0], nodes[id].coords[1],nFreq);
-
         for( 0 => int i; i < nodes[id].neighbors.cap(); i++ ) {
             // loop through neighbors, calling DFS recursively
             if( nodes[ nodes[id].neighbors[i].id ].mark == 0 ) {
                 pulse => now;
-                DFS( nodes[id].neighbors[i].id, check++ );
+                DFS( nodes[id].neighbors[i].id );
             }
-        }
-
-        unPulse();
-    }
-
-    // overload above
-    fun void DFS( int id, dur pulse, int check ) {
-        nodes[id].mark(); // mark node
-        uQ << id;
-
-        tc.lastNote(0) + glisser => float nFreq;
-        port.note( nodes[id].coords[0], nodes[id].coords[1],nFreq);
-
-        for( 0 => int i; i < nodes[id].neighbors.cap(); i++ ) {
-            // loop through neighbors, calling DFS recursively
-            if( nodes[ nodes[id].neighbors[i].id ].mark == 0 ) {
-                pulse => now;
-                DFS( nodes[id].neighbors[i].id, check++ );
-            }
-        }
-    }
-
-    fun void unPulse() {
-        for( 0 => int i; i < unQ.cap(); i++ ) {
-            nodes[ unQ[i] ].unMark();
-            port.note( nodes[ unQ[i] ].coords[0], nodes[ unQ[i] ].coords[1], 0 );
         }
     }
 

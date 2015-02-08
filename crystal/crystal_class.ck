@@ -36,6 +36,7 @@ public class TCrystal  {
         //new float[1][dimensions] @=> crystalArray;
         crystalArray[0].size(dimensions);
         
+        /*
         "Crystal created with:\n" => string msg;
         "\tMutation Var: " + mutateVar +=> msg;
         "\t# of dimensions: " + dimensions +=> msg;
@@ -45,6 +46,7 @@ public class TCrystal  {
         }
         "\n\tBase Frequency: " + baseFreq +=> msg;
         <<< msg >>>;
+        */
     }
         
     fun float lastNote( int print ) {

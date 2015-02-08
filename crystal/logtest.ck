@@ -5,8 +5,7 @@ mc.init();
 int choice;
 
 for ( 1 => int i; i < 10000; i++ ) {
-    //Math.random2( 0, 1 ) => choice;
-    0 => choice;
+    Math.random2(1) => choice;
 
     if( choice == 0 ) {
     

@@ -1,5 +1,5 @@
 
-me.dir() => string dir;
+me.dir("C:\") => string dir;
 <<< dir >>>;
 Machine.add(dir  + "/communication/Port.ck");
 1::second => now;
