@@ -21,14 +21,14 @@ fun void choose() {
         Math.random2(0,3) => choice;
 
         if( choice == 0 ) {
-            //<<< "BFS" >>>; 
+            <<< "BFS", "" >>>; 
             mc.BFS(i % 27, pulse, 0.0 );
     
         } else if( choice == 1 ){
-            //<<< "in order" >>>;
+            <<< "in order", "" >>>;
             mc.inOrder( i % 27, 1, pulse );
         } else if( choice == 2 ) {
-            //<<< "DFS" >>>;
+            <<< "DFS", "" >>>;
             mc.DFS( i%27, pulse, 0 );
         }
         i++;
@@ -57,7 +57,7 @@ fun void mutate() {
     while( 5::minute => now ) {
         1.0 / mc.port.sensor[0] +=> m;
         m => mc.tc.mutateVar; 
-        <<< "Mutate:", mc.tc.mutateVar >>>;
+        <<< "Mutate:", mc.tc.mutateVar, "" >>>;
     }
 }
 
@@ -67,7 +67,7 @@ fun void deMutate() {
         mc.tc.mutateVar - 1.0 => dif; 
         if( dif > 0.0 ) {
            dif / 96.0 -=> mc.tc.mutateVar;
-           <<< "DeMutate:", mc.tc.mutateVar >>>;
+           <<< "DeMutate:", mc.tc.mutateVar, "" >>>;
         }
     }
 }
@@ -106,13 +106,19 @@ fun void offOn( float a ) {
 fun void stopListen() {
     KBHit space;
     int check;
-    <<<"-----------------------PRESS SPACE BAR TO TURN OFF/ON---------------------------">>>;
+    <<< "---------------------- press space bar to turn off/on --------------------------" >>>;
     while( true ) {
         space => now;
         while( space.more() ) {
             space.getchar() => int s;
-            if( s == 32 && check == 0 ) {offOn(0);1=>check;}
-            if( s == 32 && check == 1 ) {offOn(1);0=>check;}
+            if( s == 32 && check == 0 ) {
+                offOn(0);1=>check;
+                <<< "off", "" >>>;
+            }
+            if( s == 32 && check == 1 ) {
+                <<< "on", "" >>>;
+                offOn(1);0=>check;
+            }
         }
     }
 }
