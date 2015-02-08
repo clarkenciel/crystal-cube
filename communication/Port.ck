@@ -158,25 +158,13 @@ Port p;
 p.init();
 
 //spork ~ p.receive(0);
-10::ms => dur cycle;
-1000::ms => dur len;
-float inc;
 
-[49, 51, 53, 54, 56, 58, 60, 61] @=> int note[];
-1::second => now;
-for (int i; i < 9; i++) {
-    p.note(i + 1, 0, 440);
-    p.note(i + 1, 1, 550);
-    p.note(i + 1, 2, 660);
-}
 while (true) {  
-     for (int i; i < 9; i++) {
-        p.note(i + 1, 0, Math.random2(400, 500));
-        p.note(i + 1, 1, Math.random2(400, 500));
-        p.note(i + 1, 2, Math.random2(400, 500));
-    }
+    p.note(6, 1, Math.random2(400, 500));
+    //  p.note(i + 1, 2, Math.random2(400, 500));
     1::second => now;
 }
+
 */
 
 
