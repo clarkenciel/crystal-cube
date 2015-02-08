@@ -1,6 +1,6 @@
 MapCrystal mc;
 mc.init();
-10::second => dur pulse;
+10::ms => dur fast => dur pulse;
 0.0 => float note;
 int choice;
 float mut;
@@ -11,6 +11,7 @@ spork ~ changeBase();
 spork ~ changeDims();
 spork ~ deMutate();
 spork ~ stopListen();
+spork ~ mc.port.receive(0);
 while( ms => now );
 
 // FUNCS------------------
@@ -34,10 +35,27 @@ fun void choose() {
     }
 }
 
+fun void changePulse() {
+    100::ms => dur rate;
+    10::ms => dur inc;
+    100::ms => dur dec;
+    
+    while( true ) {
+        for( 0 => int i; i < mc.port.sensor.cap(); i ++  ) {
+            if( mc.port.sensor[i] < 500 && pulse > fast ) {
+                inc +=> pulse;
+            } else if( pulse < 3000::ms ) {
+                dec -=> pulse;
+            }
+        }
+        rate => now;
+    }
+}
+
 fun void mutate() {
     float m;
-    while( 5::minute => now; ) {
-        Math.random( 0.1, 1.0 ) => m; 
+    while( 5::minute => now ) {
+        1.0 / mc.port.sensor[0] +=> m;
         m => mc.tc.mutateVar; 
         <<< "Mutate:", mc.tc.mutateVar >>>;
     }
@@ -58,7 +76,7 @@ fun void deMutate() {
 fun void changeBase() {
     float nuBase;
     while( true ) {
-        Math.random( 0.1, 1.0 ) * mc.tc.baseFreq => nuBase;
+        mc.tc.baseFreq / mc.port.sensor[1] +=> nuBase;
         nuBase => mc.tc.baseFreq;        
     }
 }
@@ -74,12 +92,8 @@ fun void changeDims() {
         }
         mc.tc.dim.size(nuNum);
         for( 0 => int i; i < nuNum; i++ ) {
-            nuDim[i] @=> mc.tc.dim.size(nuNum);
+            nuDim[i] @=> mc.tc.dim[i];
         }
-    }
-}
-
-
     }
 }
 
@@ -102,3 +116,4 @@ fun void stopListen() {
         }
     }
 }
+
