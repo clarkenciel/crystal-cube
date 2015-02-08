@@ -11,6 +11,7 @@ spork ~ changeBase();
 spork ~ changeDims();
 spork ~ deMutate();
 spork ~ stopListen();
+
 while( ms => now );
 
 // FUNCS------------------
@@ -20,14 +21,14 @@ fun void choose() {
         Math.random2(0,3) => choice;
 
         if( choice == 0 ) {
-            //<<< "BFS" >>>; 
+            <<< "BFS", "" >>>; 
             mc.BFS(i % 27, pulse, 0.0 );
     
         } else if( choice == 1 ){
-            //<<< "in order" >>>;
+            <<< "in order", "" >>>;
             mc.inOrder( i % 27, 1, pulse );
         } else if( choice == 2 ) {
-            //<<< "DFS" >>>;
+            <<< "DFS", "" >>>;
             mc.DFS( i%27, pulse, 0 );
         }
         i++;
@@ -36,10 +37,10 @@ fun void choose() {
 
 fun void mutate() {
     float m;
-    while( 5::minute => now; ) {
-        Math.random( 0.1, 1.0 ) => m; 
+    while( 5::minute => now ) {
+        Math.random2f( 0.1, 1.0 ) => m; 
         m => mc.tc.mutateVar; 
-        <<< "Mutate:", mc.tc.mutateVar >>>;
+        <<< "Mutate:", mc.tc.mutateVar, "" >>>;
     }
 }
 
@@ -49,7 +50,7 @@ fun void deMutate() {
         mc.tc.mutateVar - 1.0 => dif; 
         if( dif > 0.0 ) {
            dif / 96.0 -=> mc.tc.mutateVar;
-           <<< "DeMutate:", mc.tc.mutateVar >>>;
+           <<< "DeMutate:", mc.tc.mutateVar, "" >>>;
         }
     }
 }
@@ -57,8 +58,8 @@ fun void deMutate() {
 
 fun void changeBase() {
     float nuBase;
-    while( true ) {
-        Math.random( 0.1, 1.0 ) * mc.tc.baseFreq => nuBase;
+    while( 5::minute => now ) {
+        Math.random2f( 0.1, 1.0 ) * mc.tc.baseFreq => nuBase;
         nuBase => mc.tc.baseFreq;        
     }
 }
@@ -74,12 +75,8 @@ fun void changeDims() {
         }
         mc.tc.dim.size(nuNum);
         for( 0 => int i; i < nuNum; i++ ) {
-            nuDim[i] @=> mc.tc.dim.size(nuNum);
+            nuDim[i] @=> mc.tc.dim[i];
         }
-    }
-}
-
-
     }
 }
 
@@ -92,13 +89,19 @@ fun void offOn( float a ) {
 fun void stopListen() {
     KBHit space;
     int check;
-    <<<"-----------------------PRESS SPACE BAR TO TURN OFF/ON---------------------------">>>;
+    <<< "---------------------- press space bar to turn off/on --------------------------" >>>;
     while( true ) {
         space => now;
         while( space.more() ) {
             space.getchar() => int s;
-            if( s == 32 && check == 0 ) {offOn(0);1=>check;}
-            if( s == 32 && check == 1 ) {offOn(1);0=>check;}
+            if( s == 32 && check == 0 ) {
+                offOn(0);1=>check;
+                <<< "off", "" >>>;
+            }
+            if( s == 32 && check == 1 ) {
+                <<< "on", "" >>>;
+                offOn(1);0=>check;
+            }
         }
     }
 }
