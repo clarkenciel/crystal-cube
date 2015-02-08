@@ -14,7 +14,7 @@
 int handshake;
 
 // amount of sensors connected 
-#define NUM_SENSORS 6
+#define NUM_SENSORS 4
 
 // for storing analog values and 
 // reducing redudant serial messages
@@ -41,10 +41,11 @@ void sendBytes() {
       bytes[2] = i << 3 | sensor[i] >> 7;
       bytes[3] = sensor[i] & 127;
       Serial.write(bytes, 4);
+      //Serial.println(val[i]);
     }
   }
-  // standard 10 millisecond delay for analog sensors
-  delay(10);
+  // standard 50 millisecond delay for analog sensors
+  delay(50);
 }
 
 // intializes communication
@@ -67,10 +68,10 @@ void setup() {
 // main program
 void loop() {
   // initializing arrays to zero
-  for (int i = 0; i < NUM_SENSORS; i++) {
-    sensor[i] = 0;
-    val[i] = 0;  
-  }
+  //for (int i = 0; i < NUM_SENSORS; i++) {
+  //  sensor[i] = 0;
+  //  val[i] = 0;  
+  //}
   if (handshake == 1) {
     sendBytes();
   }
@@ -78,3 +79,5 @@ void loop() {
     sendID();
   }
 }
+
+

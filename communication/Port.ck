@@ -105,7 +105,6 @@ public class Port {
             // waits for next messages
             serial[ID].onBytes(4) => now;
             serial[ID].getBytes() @=> data;
-
             // bit unpacking
             (data[2] >> 3) & 15 => which;
             (data[2] & 7) << 7 | data[3] => val;
@@ -157,14 +156,13 @@ public class Port {
 Port p;
 p.init();
 
-//spork ~ p.receive(0);
+2::second => now;
+spork ~ p.receive(0);
 
 while (true) {  
-    p.note(6, 1, Math.random2(400, 500));
+    <<< p.sensor[0] >>>;
+    // p.note(Math.random2(1, 9), Math.random2(0,2), Math.random2(400, 1500));
     //  p.note(i + 1, 2, Math.random2(400, 500));
-    1::second => now;
+    100::ms => now;
 }
-
 */
-
-
