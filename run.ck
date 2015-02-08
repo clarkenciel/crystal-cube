@@ -1,6 +1,13 @@
-Machine.add(dir  + "/communication/Port.ck");
+// run.ck
+
+// communication class
+Machine.add(me.dir()  + "/communication/Port.ck");
 1::second => now;
-Machine.add(dir + "/crystal/crystal_class.ck");
-Machine.add(dir + "/crystal/map_crystal.ck");
+
+// crystal classes
+Machine.add(me.dir() + "/crystal/crystal_class.ck");
+Machine.add(me.dir()+ "/crystal/map_crystal.ck");
 500::ms => now;
-Machine.add(dir + "/crystal/score.ck");
+
+// score
+Machine.add(me.dir() + "/crystal/score.ck");
