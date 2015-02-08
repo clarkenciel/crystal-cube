@@ -52,7 +52,8 @@ public class MapCrystal {
    TCrystal tc;
    Port port;
    int unQ[0];
-   // some code here using Port.ck
+   dur pulse;
+   1.0 => float active;
 
    // -----------------------SETUP---------------------
    fun void init() {
@@ -115,14 +116,7 @@ public class MapCrystal {
     }
 
     // ---------------------SOUND PATTERNS----------------
-    fun void pulse( 
-        int id, 
-        dur pause,
-        float mutater, 
-        float dimensions[],
-        int numDimensions,
-        float baseFreq,
-        float glisser) {
+    fun void BFS( int id, dur pulse, float glisser) {
         ///<<< "\t\t\t\tBFS Starting @:"+id >>>;
 
         // BFS of the array
@@ -136,13 +130,13 @@ public class MapCrystal {
         // also, init tenney crystal
         if ( queue.cap() < 1 ) {
             queue << n;
-            tc.init( mutater, dimensions, numDimensions, baseFreq ); 
+            tc.init(); 
         }
 
         // grow the crystal by one step and send the frequency
         //nodes[id].play( tc.lastNote(1) );
         tc.lastNote(0) + glisser => float nFreq;
-        port.note( nodes[id].coords[0] + 1, nodes[id].coords[1],nFreq);
+        port.note( nodes[id].coords[0] + 1, nodes[id].coords[1],nFreq * active);
         //<<< nFreq >>>;
         //<<< "port coords: [",nodes[id].coords[0],",",nodes[id].coords[1],"]">>>;
 
@@ -161,8 +155,8 @@ public class MapCrystal {
 
         // if queue has members, pulse recursively
         if ( queue.cap() > 0 ) {
-            pause => now; // wait
-            pulse( queue[0].id, pause, mutater, dimensions, numDimensions, baseFreq, glisser);
+            pulse => now; // wait
+            BFS( queue[0].id, pulse, glisser);
         } else {
             unmarkNodes(); // or, reset the nodes
         }
@@ -172,32 +166,31 @@ public class MapCrystal {
     fun void inOrder( int startId, int dir, dur pulse ) {
         ///<<< "\t\t\tIn-order search starting @:" + startId >>>;
         int place;
+        float nFreq;
+        tc.init();
 
         for( startId => int i; i < nodes.cap(); dir +=> i ) {
             ( startId + i) % 27 => place;
             nodes[ place ].mark();
             if( nodes[ (place + 25) % 27 ].marked == 1 ) {
                 nodes[ (place + 25) % 27 ].unMark();
+                tc.lastNote(0) => nFreq;
+                port.note( nodes[i].coords[0] + 1, nodes[i].coords[1], nFreq * active );
             }
             pulse => now;
         }
     }
 
-    fun void DFS( int id, 
-        dur pulse, 
-        float mutater,
-        float dimensions[],
-        int numDimensions,
-        float baseFreq ) {
+    fun void DFS( int id, dur pulse ) {
 
         0 => int check;
 
         nodes[id].mark(); // mark node
         unQ << id;
-        tc.init( mutater, dimensions, numDimensions, baseFreq ); 
+        tc.init(); 
 
         tc.lastNote(0) => float nFreq;
-        port.note( nodes[id].coords[0] + 1, nodes[id].coords[1],nFreq);
+        port.note( nodes[id].coords[0] + 1, nodes[id].coords[1],nFreq * active );
 
         for( 0 => int i; i < nodes[id].neighbors.cap(); i++ ) {
             // loop through neighbors, calling DFS recursively
@@ -216,7 +209,7 @@ public class MapCrystal {
         unQ << id;
 
         tc.lastNote(0) => float nFreq;
-        port.note( nodes[id].coords[0] + 1, nodes[id].coords[1],nFreq);
+        port.note( nodes[id].coords[0] + 1, nodes[id].coords[1],nFreq * active );
 
         for( 0 => int i; i < nodes[id].neighbors.cap(); i++ ) {
             // loop through neighbors, calling DFS recursively
@@ -240,6 +233,12 @@ public class MapCrystal {
         // unmark all nodes in crystal
         for ( 0 => int i; i < nodes.cap(); i++ ) {
             nodes[i].unMark();
+            port.note(nodes[i].coords[0] + 1, nodes[i].coords[1], 0);
+        }
+    }
+
+    fun void kill() {
+        for( 0 => int i; i < nodes.cap(); i ++ ) {
             port.note(nodes[i].coords[0] + 1, nodes[i].coords[1], 0);
         }
     }

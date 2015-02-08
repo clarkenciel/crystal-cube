@@ -1,7 +1,7 @@
-/* James Tenney Harmonic Space Crystal Implementation
-/* Author: Danny Clarke, with copious thanks to Peter Nelson
-/* Developed in collaboration with Eric Heep at CalArts
-/* Date: 12/29/2014
+// James Tenney Harmonic Space Crystal Implementation
+// Author: Danny Clarke, with copious thanks to Peter Nelson
+// Developed in collaboration with Eric Heep at CalArts
+// Date: 12/29/2014
 
 /* Explanation:
     You define the prime numbers that comprise your three dimensions for growth.
@@ -47,6 +47,11 @@ public class TCrystal  {
         "\n\tBase Frequency: " + baseFreq +=> msg;
         <<< msg >>>;
         */
+    }
+
+    // overload
+    fun void init() {
+        crystalArray[0].size(dimensions);
     }
         
     fun float lastNote( int print ) {
