@@ -85,6 +85,7 @@ public class Port {
 
     // pings the Arduinos and returns their 'arduinoID'
     fun void handshake() {
+        // flush out old messages
         [255, 255] @=> int ping[];
         for (int i ; i < serial.cap(); i++) {
             serial[i].writeBytes(ping);
@@ -101,14 +102,16 @@ public class Port {
         int which, val;
         int data[3];
 
+        port(ID) => int p;
         while (true) {
-            // waits for next messages
-            serial[ID].onBytes(4) => now;
-            serial[ID].getBytes() @=> data;
+            // waits
+            serial[p].onBytes(4) => now;
+            serial[p].getBytes() @=> data;
+
             // bit unpacking
             (data[2] >> 3) & 15 => which;
             (data[2] & 7) << 7 | data[3] => val;
-        
+
             // garbage filter
             if (data[0] == 64 && data[1] == 64) {
                 val => sensor[which];
@@ -137,7 +140,7 @@ public class Port {
         num << 3 => bytes[0];
         (phase_inc >> 24) | bytes[0] => bytes[0];
         (phase_inc >> 16) & 255 => bytes[1];
-        (phase_inc >> 8) & 255 => bytes[2];
+        (phase_inc >> 8) & 255 > bytes[2];
         phase_inc & 255 => bytes[3];
 
         // matches port to ID
@@ -164,4 +167,5 @@ while (true) {
     //  p.note(i + 1, 2, Math.random2(400, 500));
     200::ms => now;
 }
+
 */

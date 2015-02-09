@@ -131,7 +131,8 @@ fun void stopListen() {
             }
             if( s == 32 && check == 1 ) {
                 <<< "on", "" >>>;
-                offOn(1);0=>check;
+                offOn(1);
+                0=>check;
             }
         }
     }
