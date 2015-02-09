@@ -22,7 +22,7 @@ public class TCrystal  {
                         //      geometric dimensions)
     1.0 => float mutateVar; 
     3 => int dimensions; // number of dimensions that we care about
-    200 => float baseFreq;
+    900 => float baseFreq;
 
     // -- CRYSTAL
     float crystalArray[1][dimensions]; // store [dimension][node coordinates]
@@ -51,6 +51,7 @@ public class TCrystal  {
 
     // overload
     fun void init() {
+        crystalArray.size(1);
         crystalArray[0].size(dimensions);
     }
         
@@ -61,7 +62,9 @@ public class TCrystal  {
         crystalArray.cap() - 1 => int lastInd;
 
         grow( print );
+        //<<< "getting freq for crystal, size:", crystalArray.cap(),"">>>;
         getFreq( crystalArray[lastInd] ) => result;
+        //<<< "got freq", result, "" >>>;
         while ( result > 1680 ){
             2 /=> result;
         }
@@ -74,7 +77,7 @@ public class TCrystal  {
     fun void grow(int print) {
         // Add a new node to the crystal
         float node[dimensions];
-        999999999999.0 => float distance;
+        float distance;
         float store[0];
 
         for ( 0 => int i; i < crystalArray.cap(); i++ ) {
@@ -84,7 +87,7 @@ public class TCrystal  {
                 // store the node if it isn't already in crystal and
                 //  is shortest so far
 
-                if ( hDist( node ) < distance ) {
+                if ( hDist( node ) < distance || i == 0 ) {
                     if ( doesExist( node ) == 0 ) {
                         hDist( node ) => distance; 
                         node @=> store;
@@ -104,6 +107,7 @@ public class TCrystal  {
         if ( print == 1 ) {
             printCrystal();
         }
+        //printCrystal();
     }
     
     fun float hDist( float newCoord[] ) {

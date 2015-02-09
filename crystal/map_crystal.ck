@@ -56,10 +56,11 @@ public class MapCrystal {
    1.0 => float active;
 
    // -----------------------SETUP---------------------
-   fun void init() {
+   fun void init( dur p ) {
         // initialize nodes
         getCoords();
         drawGraph();
+        p => pulse;
 
         //printNodes( nodes );
         //printInts( coords );
@@ -116,7 +117,7 @@ public class MapCrystal {
     }
 
     // ---------------------SOUND PATTERNS----------------
-    fun void BFS( int id, dur pulse, float glisser) {
+    fun void BFS( int id, float glisser) {
         ///<<< "\t\t\t\tBFS Starting @:"+id >>>;
 
         // BFS of the array
@@ -124,21 +125,23 @@ public class MapCrystal {
         nodes[id] @=> Node n;
 
         nodes[id].mark(); // mark node as visited
+        //<<< "Node", id, "Marked" >>>;
         unQ << id;
         
         // safety for first run
         // also, init tenney crystal
         if ( queue.cap() < 1 ) {
+            //<<< "New TC" >>>;
             queue << n;
             tc.init(); 
         }
+        //<<< "sending pitch" >>>;
 
         // grow the crystal by one step and send the frequency
-        //nodes[id].play( tc.lastNote(1) );
         tc.lastNote(0) + glisser => float nFreq;
+        
+        //<<< nFreq,"Sent","">>>;
         port.note( nodes[id].coords[0] + 1, nodes[id].coords[1],nFreq * active);
-        //<<< nFreq >>>;
-        //<<< "port coords: [",nodes[id].coords[0],",",nodes[id].coords[1],"]">>>;
 
         // put unvisited neighbors on queue
         for ( 0 => int i; i < n.neighbors.cap(); i++ ) {
@@ -149,82 +152,101 @@ public class MapCrystal {
 
         // remove this node from queue
         for( 1 => int i; i < queue.cap(); i++ ) {
-            queue[i] @=> queue[i-1];
+            queue[i] @=> queue[i-1]; // shift values to left
         }
-        queue.size(queue.cap() - 1);
+        queue.size(queue.cap() - 1); // resize 1 smaller
 
         // if queue has members, pulse recursively
         if ( queue.cap() > 0 ) {
+            //<<< pulse/ms >>>;
+            //<<< "next BFS node:",queue[0].id,"" >>>;
             pulse => now; // wait
-            BFS( queue[0].id, pulse, glisser);
+            BFS( queue[0].id, glisser);
         } else {
-            unmarkNodes(); // or, reset the nodes
+            //unmarkNodes(); // or, reset the nodes
         }
                 
     }
 
-    fun void inOrder( int startId, int dir, dur pulse ) {
+    fun void inOrder( int startId, int dir ) {
         ///<<< "\t\t\tIn-order search starting @:" + startId >>>;
         int place;
         float nFreq;
         tc.init();
 
-        for( startId => int i; i < nodes.cap(); dir +=> i ) {
+        if( dir < 0 ) Math.abs( dir ) => dir;
+        for( startId => int i; i < nodes.cap() ; dir +=> i ) {
             ( startId + i) % 27 => place;
             nodes[ place ].mark();
+            port.note( nodes[place].coords[0]+1, nodes[place].coords[1], nFreq * active );
+            //<<< "Node", place, "Marked" >>>;
             if( nodes[ (place + 25) % 27 ].marked == 1 ) {
                 nodes[ (place + 25) % 27 ].unMark();
                 tc.lastNote(0) => nFreq;
                 port.note( nodes[i].coords[0] + 1, nodes[i].coords[1], nFreq * active );
+                //<<< nFreq,"Sent","">>>;
             }
+            //<<< pulse / ms >>>;
             pulse => now;
         }
+        
     }
 
-    fun void DFS( int id, dur pulse ) {
-
+    fun void DFS( int id  ) {
         0 => int check;
 
         nodes[id].mark(); // mark node
+        //<<< "Node", id, "Marked" >>>;
         unQ << id;
+        //<<< "new crystal" >>>;
         tc.init(); 
 
         tc.lastNote(0) => float nFreq;
         port.note( nodes[id].coords[0] + 1, nodes[id].coords[1],nFreq * active );
+        //<<< nFreq,"Sent","">>>;
 
         for( 0 => int i; i < nodes[id].neighbors.cap(); i++ ) {
             // loop through neighbors, calling DFS recursively
             if( nodes[ nodes[id].neighbors[i] ].marked == 0 ) {
+                //<<< pulse/ms >>>;
                 pulse => now;
-                DFS( nodes[id].neighbors[i], pulse, check++ );
+                //<<< nodes[id].neighbors[i] >>>;
+                DFS( nodes[id].neighbors[i],  check++ );
             }
         }
 
-        unPulse();
+        //unPulse();
     }
 
     // overload above
-    fun void DFS( int id, dur pulse, int check ) {
+    fun void DFS( int id,  int check ) {
         nodes[id].mark(); // mark node
+        //<<< "Node", id, "Marked" >>>;
         unQ << id;
 
         tc.lastNote(0) => float nFreq;
         port.note( nodes[id].coords[0] + 1, nodes[id].coords[1],nFreq * active );
-
+        //<<< nFreq,"Sent","">>>;
         for( 0 => int i; i < nodes[id].neighbors.cap(); i++ ) {
             // loop through neighbors, calling DFS recursively
             if( nodes[ nodes[id].neighbors[i] ].marked == 0 ) {
+                //<<< pulse/ms >>>;
                 pulse => now;
-                DFS( nodes[id].neighbors[i], pulse, check++ );
+                DFS( nodes[id].neighbors[i], check++ );
             }
         }
     }
 
-    fun void unPulse() {
+    fun void unPulse( float mod ) {
         for( 0 => int i; i < unQ.cap(); i++ ) {
             nodes[ unQ[i] ].unMark();
             port.note( nodes[ unQ[i] ].coords[0] + 1, nodes[ unQ[i] ].coords[1], 0 );
+            pulse * mod => now;
         }
+    }
+
+    fun void unPulse() {
+        unPulse( 1.0 );
     }
 
     // ------------------------SUPPORT FUNCS-----------------
@@ -291,7 +313,9 @@ public class MapCrystal {
 //------------TESTS----------------
 /*
 MapCrystal m;
-m.init();
+m.init();WvIn apollo;
+apollo.path(me.dir() + "apollo11saturnVaudio.wav");
+apollo.rate(1.0);
 for ( 0 => int i; i < 27; i ++ ) {
     <<< "new pulse" >>>;
     m.pulse( i );

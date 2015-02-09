@@ -151,7 +151,6 @@ public class Port {
     }
 }
 
-
 /*
 Port p;
 p.init();
@@ -163,6 +162,6 @@ while (true) {
     <<< p.sensor[0] >>>;
     // p.note(Math.random2(1, 9), Math.random2(0,2), Math.random2(400, 1500));
     //  p.note(i + 1, 2, Math.random2(400, 500));
-    100::ms => now;
+    200::ms => now;
 }
 */

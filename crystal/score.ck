@@ -1,35 +1,44 @@
 MapCrystal mc;
-mc.init();
-10::ms => dur fast => dur pulse;
-0.0 => float note;
+10::ms => dur fast;
+mc.init(fast);
 int choice;
-float mut;
 
 spork ~ choose();
-spork ~ mutate();
-spork ~ changeBase();
-spork ~ changeDims();
-spork ~ deMutate();
+//spork ~ mutate();
+//spork ~ changeBase();
+//spork ~ changeDims();
+//spork ~ changePulse();
+//spork ~ deMutate();
 spork ~ stopListen();
 spork ~ mc.port.receive(0);
+//spork ~ mc.unPulse( 3 );
+
 while( ms => now );
 
 // FUNCS------------------
 fun void choose() {
     int i;
-    while( true ) {
-        Math.random2(0,3) => choice;
+    float v;
+    [-1, 1] @=> int c[];
 
+    while( true ) {
+        60 - (mc.port.sensor[0]-11) => v;
+        Math.random2(0,2) => choice;
+        v * 10 => float g;
+        chout <= v;
+        chout <= "\n";
+        chout.flush();
         if( choice == 0 ) {
-            <<< "BFS", "" >>>; 
-            mc.BFS(i % 27, pulse, 0.0 );
+            //<<< "BFS", "" >>>; 
+            mc.BFS(i % 27, g );
     
         } else if( choice == 1 ){
-            <<< "in order", "" >>>;
-            mc.inOrder( i % 27, 1, pulse );
+            //<<< "in order", "" >>>;
+            c[ Math.random2( 0, 1 ) ] @=> int d;
+            mc.inOrder( i % 27, d  );
         } else if( choice == 2 ) {
-            <<< "DFS", "" >>>;
-            mc.DFS( i%27, pulse, 0 );
+            //<<< "DFS", "" >>>;
+            mc.DFS( i%27 );
         }
         i++;
     }
@@ -42,10 +51,11 @@ fun void changePulse() {
     
     while( true ) {
         for( 0 => int i; i < mc.port.sensor.cap(); i ++  ) {
-            if( mc.port.sensor[i] < 500 && pulse > fast ) {
-                inc +=> pulse;
-            } else if( pulse < 3000::ms ) {
-                dec -=> pulse;
+            //<<< "Sensor:", mc.port.sensor[i], "" >>>;
+            if( mc.port.sensor[i] < 500 && mc.pulse < fast*10 ) {
+                inc +=> mc.pulse;
+            } else if( mc.pulse > fast ) {
+                dec -=> mc.pulse;
             }
         }
         rate => now;
@@ -54,16 +64,16 @@ fun void changePulse() {
 
 fun void mutate() {
     float m;
-    while( 5::minute => now ) {
-        1.0 / mc.port.sensor[0] +=> m;
+    while( 500::ms => now ) {
+        1.0 / (mc.port.sensor[0] + 1) => m;
         m => mc.tc.mutateVar; 
-        <<< "Mutate:", mc.tc.mutateVar, "" >>>;
+        //<<< "Mutate:", mc.tc.mutateVar, "" >>>;
     }
 }
 
 fun void deMutate() {
     float dif;
-    while( 15::minute => now ) {
+    while( 1500::ms => now ) {
         mc.tc.mutateVar - 1.0 => dif; 
         if( dif > 0.0 ) {
            dif / 96.0 -=> mc.tc.mutateVar;
@@ -76,16 +86,19 @@ fun void deMutate() {
 fun void changeBase() {
     float nuBase;
     while( true ) {
-        mc.tc.baseFreq / mc.port.sensor[1] +=> nuBase;
+        //mc.tc.baseFreq / (mc.port.sensor[1]+1) => nuBase;
+        1.0 => nuBase;
         nuBase => mc.tc.baseFreq;        
+        10::ms => now;
     }
 }
 
 fun void changeDims() {
     int nuNum;
     float nuDim[];
-    while( 3::minute => now ) {
-        Math.random2( 2, 5 ) => nuNum;
+    minute => now;
+    while( minute => now ) {
+        3 => nuNum;
         nuDim.size( nuNum );
         for( 0 => int i; i < nuNum; i++ ) {
             Math.random2f( 2.0, 17.0 ) @=> nuDim[i];
@@ -112,7 +125,8 @@ fun void stopListen() {
         while( space.more() ) {
             space.getchar() => int s;
             if( s == 32 && check == 0 ) {
-                offOn(0);1=>check;
+                offOn(0);
+                1 => check;
                 <<< "off", "" >>>;
             }
             if( s == 32 && check == 1 ) {

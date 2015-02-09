@@ -44,8 +44,6 @@ void sendBytes() {
       //Serial.println(val[i]);
     }
   }
-  // standard 50 millisecond delay for analog sensors
-  delay(50);
 }
 
 // intializes communication
@@ -68,16 +66,26 @@ void setup() {
 // main program
 void loop() {
   // initializing arrays to zero
-  //for (int i = 0; i < NUM_SENSORS; i++) {
-  //  sensor[i] = 0;
-  //  val[i] = 0;  
-  //}
+  for (int i = 0; i < NUM_SENSORS; i++) {
+    sensor[i] = 0;
+    val[i] = 0;  
+  }
   if (handshake == 1) {
     sendBytes();
   }
   else if (Serial.available() && handshake == 0) {
     sendID();
+    delay(1000);
   }
+  // standard 50 millisecond delay for analog sensors
+  delay(30);
+}
+
+void blnk() {
+  while (true) {  
+    Serial.write(8);
+    delay(500);
+  } 
 }
 
 
