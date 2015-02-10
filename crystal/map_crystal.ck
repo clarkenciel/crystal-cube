@@ -56,7 +56,7 @@ public class MapCrystal {
    dur pulse;
    float gliss[4];
    1.0 => float active;
-   2 => int offset;
+   1 => int offset;
 
    // -----------------------SETUP---------------------
    fun void init( dur p ) {
@@ -156,7 +156,7 @@ public class MapCrystal {
         }
         Math.random2f( -1*g, g) => g;
         port.note( nodes[id].coords[0] + offset, nodes[id].coords[1],(nFreq + g) * active);
-        //<<< nFreq,"Sent","">>>;
+        //<<< nFreq + g,"Sent","">>>;
 
         // put unvisited neighbors on queue
         for ( 0 => int i; i < n.neighbors.cap(); i++ ) {
@@ -210,6 +210,7 @@ public class MapCrystal {
                 }
                 Math.random2f( -1*g, g) => g;
                 port.note( nodes[place].coords[0] + offset, nodes[place].coords[1],(nFreq + g) * active);
+                //<<< nFreq+g,"Sent","">>>;
             }
             //<<< pulse / ms >>>;
             pulse => now;
@@ -275,6 +276,7 @@ public class MapCrystal {
         }
         Math.random2f( -1*g, g) => g;
         port.note( nodes[id].coords[0] + offset, nodes[id].coords[1],(nFreq + g) * active);
+        //<<< nFreq + g, "Sent", "">>>;
         
         for( 0 => int i; i < nodes[id].neighbors.cap(); i++ ) {
             // loop through neighbors, calling DFS recursively
@@ -309,7 +311,6 @@ public class MapCrystal {
         // unmark all nodes in crystal
         for ( 0 => int i; i < nodes.cap(); i++ ) {
             nodes[i].unMark();
-            <<<"turning off", nodes[i].coords[0]+offset,"">>>;
             port.note(nodes[i].coords[0] + offset, nodes[i].coords[1], 0);
             pulse * m => now;
         }

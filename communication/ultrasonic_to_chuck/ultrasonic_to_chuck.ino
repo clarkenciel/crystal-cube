@@ -28,31 +28,26 @@ uint8_t bytes[4];
 void sendBytes() {
   // initializing arrays to zero
   for (int i = 0; i < NUM_SENSORS; i++) {
-    sensor[i] = 0;
     val[i] = 0;  
   }
 
-  char initialize[2];
-  Serial.readBytes(initialize, 2);
+  // loops through collection of sensors 
+  for (int i = 0; i < NUM_SENSORS; i++) {
+    // reads in values starting at analog pin 2
+    val[i] = analogRead(i + 2); 
 
-  if (byte(initialize[0]) == 255 && byte(initialize[1]) == 255) { 
-    // loops through collection of sensors 
-    for (int i = 0; i < NUM_SENSORS; i++) {
-      // reads in values starting at analog pin 2
-      val[i] = analogRead(i + 2); 
+    // checks for a new value
+    if (val[i] != sensor[i]) {
+      sensor[i] = val[i];
 
-      // checks for a new value
-      if (val[i] != sensor[i]) {
-        sensor[i] = val[i];
-
-        // bit packing
-        bytes[0] = B1000000;
-        bytes[1] = B1000000;
-        bytes[2] = i << 3 | sensor[i] >> 7;
-        bytes[3] = sensor[i] & 127;
-        Serial.write(bytes, 4);
-      }
+      // bit packing
+      bytes[0] = B1000000;
+      bytes[1] = B1000000;
+      bytes[2] = i << 3 | sensor[i] >> 7;
+      bytes[3] = sensor[i] & 127;
+      Serial.write(bytes, 4);
     }
+    delay(100);
   }
 }
 
@@ -75,13 +70,14 @@ void setup() {
 
 // main program
 void loop() {
-  if (Serial.available() && handshake == 1) {
+  if (handshake == 1) {
     sendBytes();
   }
   else if (Serial.available() && handshake == 0) {
     sendID();
   }
 }
+
 
 
 

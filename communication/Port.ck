@@ -94,6 +94,7 @@ public class Port {
             // sets arduino ID array
             ID => arduinoID[i];
             <<< ID, "" >>>;
+            300::ms => now;
         }
     }
 
@@ -154,6 +155,7 @@ public class Port {
     }
 }
 
+
 /*
 Port p;
 p.init();
@@ -162,10 +164,8 @@ p.init();
 spork ~ p.receive(0);
 
 while (true) {  
-    <<< p.sensor[0] >>>;
+    <<< p.sensor[0], p.sensor[1] >>>;
     // p.note(Math.random2(1, 9), Math.random2(0,2), Math.random2(400, 1500));
     //  p.note(i + 1, 2, Math.random2(400, 500));
     200::ms => now;
-}
-
-*/
+}*/
