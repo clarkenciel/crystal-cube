@@ -4,8 +4,8 @@ private class Node {
     int neighbors[0];
     0 => int marked;
 
-    OscOut out;
-    out.dest( "localhost", 7000 );
+    //OscOut out;
+    //out.dest( "localhost", 7000 );
 
     fun void init( int aid, int acoords[] ){
         aid => id;
@@ -29,17 +29,17 @@ private class Node {
         ///<<< "\t\t\t\t\t\t\tMARKING NODE:",id >>>;
         1 => marked;
 
-        out.start( "/nodes/" + "0" + id + ", i" );
-        1 => out.add;
-        out.send();
+        //out.start( "/nodes/" + "0" + id + ", i" );
+        //1 => out.add;
+        //out.send();
         // something to turn on an arduino here
     }
 
     fun void unMark() {
         0 => marked;
-        out.start( "/nodes/" + "0" + id + ", i" );
-        0 => out.add;
-        out.send();
+        //out.start( "/nodes/" + "0" + id + ", i" );
+        //0 => out.add;
+        //out.send();
         // something to turn off an arudino here
     }
 }
@@ -47,13 +47,16 @@ private class Node {
 public class MapCrystal {
    
    int coords[27][2];
+   int special;
    Node nodes[27];
    Node queue[0];
    TCrystal tc;
    Port port;
    int unQ[0];
    dur pulse;
+   float gliss[4];
    1.0 => float active;
+   2 => int offset;
 
    // -----------------------SETUP---------------------
    fun void init( dur p ) {
@@ -61,11 +64,13 @@ public class MapCrystal {
         getCoords();
         drawGraph();
         p => pulse;
-
-        //printNodes( nodes );
-        //printInts( coords );
-
+        
+        for( 0 => int i; i < gliss.cap(); i ++ ) {
+            0.0 @=> gliss[i];
+        }
+        <<< "kicking off port","" >>>;
         port.init();
+        <<< "port cleared","" >>>;
         2::second => now;
    }
 
@@ -117,7 +122,7 @@ public class MapCrystal {
     }
 
     // ---------------------SOUND PATTERNS----------------
-    fun void BFS( int id, float glisser) {
+    fun void BFS( int id ) {
         ///<<< "\t\t\t\tBFS Starting @:"+id >>>;
 
         // BFS of the array
@@ -138,10 +143,20 @@ public class MapCrystal {
         //<<< "sending pitch" >>>;
 
         // grow the crystal by one step and send the frequency
-        tc.lastNote(0) + glisser => float nFreq;
-        
+        tc.lastNote(0) => float nFreq;
+        float g;
+        if( id == 0 || id == 1 || id == 3 || id == 4 ) {
+            gliss[0] @=> g;
+        } else if( id == 1 || id == 2 || id == 4 || id == 5 ) {
+            gliss[1] @=> g;
+        } else if( id == 3 || id == 4 || id == 6 || id == 7 ) {
+            gliss[2] @=> g;
+        } else if( id == 4 || id == 5 || id == 7 || id == 8 ) {
+            gliss[3] @=> g;
+        }
+        Math.random2f( -1*g, g) => g;
+        port.note( nodes[id].coords[0] + offset, nodes[id].coords[1],(nFreq + g) * active);
         //<<< nFreq,"Sent","">>>;
-        port.note( nodes[id].coords[0] + 1, nodes[id].coords[1],nFreq * active);
 
         // put unvisited neighbors on queue
         for ( 0 => int i; i < n.neighbors.cap(); i++ ) {
@@ -161,7 +176,7 @@ public class MapCrystal {
             //<<< pulse/ms >>>;
             //<<< "next BFS node:",queue[0].id,"" >>>;
             pulse => now; // wait
-            BFS( queue[0].id, glisser);
+            BFS( queue[0].id );
         } else {
             //unmarkNodes(); // or, reset the nodes
         }
@@ -178,13 +193,23 @@ public class MapCrystal {
         for( startId => int i; i < nodes.cap() ; dir +=> i ) {
             ( startId + i) % 27 => place;
             nodes[ place ].mark();
-            port.note( nodes[place].coords[0]+1, nodes[place].coords[1], nFreq * active );
-            //<<< "Node", place, "Marked" >>>;
+            
             if( nodes[ (place + 25) % 27 ].marked == 1 ) {
                 nodes[ (place + 25) % 27 ].unMark();
                 tc.lastNote(0) => nFreq;
-                port.note( nodes[i].coords[0] + 1, nodes[i].coords[1], nFreq * active );
-                //<<< nFreq,"Sent","">>>;
+                
+                float g;
+                if( place == 0 || place == 1 || place == 3 || place == 4 ) {
+                    gliss[0] @=> g;
+                } else if( place == 1 || place == 2 || place == 4 || place == 5 ) {
+                    gliss[1] @=> g;
+                } else if( place == 3 || place == 4 || place == 6 || place == 7 ) {
+                    gliss[2] @=> g;
+                } else if( place == 4 || place == 5 || place == 7 || place == 8 ) {
+                    gliss[3] @=> g;
+                }
+                Math.random2f( -1*g, g) => g;
+                port.note( nodes[place].coords[0] + offset, nodes[place].coords[1],(nFreq + g) * active);
             }
             //<<< pulse / ms >>>;
             pulse => now;
@@ -202,8 +227,20 @@ public class MapCrystal {
         tc.init(); 
 
         tc.lastNote(0) => float nFreq;
-        port.note( nodes[id].coords[0] + 1, nodes[id].coords[1],nFreq * active );
-        //<<< nFreq,"Sent","">>>;
+        
+        float g;
+        if( id == 0 || id == 1 || id == 3 || id == 4 ) {
+            gliss[0] @=> g;
+        } else if( id == 1 || id == 2 || id == 4 || id == 5 ) {
+            gliss[1] @=> g;
+        } else if( id == 3 || id == 4 || id == 6 || id == 7 ) {
+            gliss[2] @=> g;
+        } else if( id == 4 || id == 5 || id == 7 || id == 8 ) {
+            gliss[3] @=> g;
+        }
+        Math.random2f( -1*g, g) => g;
+        port.note( nodes[id].coords[0] + offset, nodes[id].coords[1],(nFreq + g) * active);
+        //<<< nFreq >>>;
 
         for( 0 => int i; i < nodes[id].neighbors.cap(); i++ ) {
             // loop through neighbors, calling DFS recursively
@@ -225,8 +262,20 @@ public class MapCrystal {
         unQ << id;
 
         tc.lastNote(0) => float nFreq;
-        port.note( nodes[id].coords[0] + 1, nodes[id].coords[1],nFreq * active );
-        //<<< nFreq,"Sent","">>>;
+        
+        float g;
+        if( id == 0 || id == 1 || id == 3 || id == 4 ) {
+            gliss[0] @=> g;
+        } else if( id == 1 || id == 2 || id == 4 || id == 5 ) {
+            gliss[1] @=> g;
+        } else if( id == 3 || id == 4 || id == 6 || id == 7 ) {
+            gliss[2] @=> g;
+        } else if( id == 4 || id == 5 || id == 7 || id == 8 ) {
+            gliss[3] @=> g;
+        }
+        Math.random2f( -1*g, g) => g;
+        port.note( nodes[id].coords[0] + offset, nodes[id].coords[1],(nFreq + g) * active);
+        
         for( 0 => int i; i < nodes[id].neighbors.cap(); i++ ) {
             // loop through neighbors, calling DFS recursively
             if( nodes[ nodes[id].neighbors[i] ].marked == 0 ) {
@@ -239,8 +288,9 @@ public class MapCrystal {
 
     fun void unPulse( float mod ) {
         for( 0 => int i; i < unQ.cap(); i++ ) {
+            <<< "Unpulse:",i+1,"">>>;
             nodes[ unQ[i] ].unMark();
-            port.note( nodes[ unQ[i] ].coords[0] + 1, nodes[ unQ[i] ].coords[1], 0 );
+            port.note( nodes[ unQ[i] ].coords[0] + offset, nodes[ unQ[i] ].coords[1], 0 );
             pulse * mod => now;
         }
     }
@@ -252,16 +302,34 @@ public class MapCrystal {
     // ------------------------SUPPORT FUNCS-----------------
 
     fun void unmarkNodes() {
+        unmarkNodes( 1.0 );
+    }
+    
+    fun void unmarkNodes( float m ) {
         // unmark all nodes in crystal
         for ( 0 => int i; i < nodes.cap(); i++ ) {
             nodes[i].unMark();
-            port.note(nodes[i].coords[0] + 1, nodes[i].coords[1], 0);
+            <<<"turning off", nodes[i].coords[0]+offset,"">>>;
+            port.note(nodes[i].coords[0] + offset, nodes[i].coords[1], 0);
+            pulse * m => now;
+        }
+    }
+    
+    fun void sSauce() {
+        for( 0 => int i; i < nodes.cap(); i++ ) {
+            nodes[i].mark(); // mark all in attempt to kill any search funcs
+        }
+        for( 0 => int i; i < nodes.cap(); i++ ) {
+            port.note(nodes[i].coords[0] + offset, nodes[i].coords[1], tc.baseFreq * ((i % 8) + 1) );
+            50::ms => now;
+            port.note(nodes[i].coords[0] + offset, nodes[i].coords[1], 0);
+            50::ms => now;
         }
     }
 
     fun void kill() {
         for( 0 => int i; i < nodes.cap(); i ++ ) {
-            port.note(nodes[i].coords[0] + 1, nodes[i].coords[1], 0);
+            port.note(nodes[i].coords[0] + offset, nodes[i].coords[1], 0);
         }
     }
 
