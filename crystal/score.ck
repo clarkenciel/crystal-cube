@@ -1,7 +1,8 @@
 MapCrystal mc;
-10::ms => dur fast;
+20::ms => dur fast;
 mc.init(fast);
 int choice;
+//Event pause; might use this later to pause shit when we do special stuff - perhaps kill, then respork in the specialSauce
 
 spork ~ choose();
 //spork ~ mutate();
@@ -10,7 +11,8 @@ spork ~ choose();
 //spork ~ changePulse();
 //spork ~ deMutate();
 spork ~ stopListen();
-spork ~ mc.port.receive(0);
+//spork ~ mc.port.receive(0);
+//spork ~ specialSauce();
 //spork ~ mc.unPulse( 3 );
 
 while( ms => now );
@@ -18,27 +20,28 @@ while( ms => now );
 // FUNCS------------------
 fun void choose() {
     int i;
-    float v;
     [-1, 1] @=> int c[];
 
     while( true ) {
-        60 - (mc.port.sensor[0]-11) => v;
+        for( 0 => int j; j < mc.port.sensor.cap(); j ++ ) {
+            //60 - (mc.port.sensor[i]-11) @=> mc.gliss[i];
+        }
+        
         Math.random2(0,2) => choice;
-        v * 10 => float g;
-        chout <= v;
-        chout <= "\n";
-        chout.flush();
+        
         if( choice == 0 ) {
-            //<<< "BFS", "" >>>; 
-            mc.BFS(i % 27, g );
-    
+            <<< "BFS", "" >>>; 
+            mc.BFS(i % 27);
+            mc.unmarkNodes();
         } else if( choice == 1 ){
-            //<<< "in order", "" >>>;
-            c[ Math.random2( 0, 1 ) ] @=> int d;
+            <<< "in order", "" >>>;
+            1 => int d;
             mc.inOrder( i % 27, d  );
+            mc.unmarkNodes();
         } else if( choice == 2 ) {
-            //<<< "DFS", "" >>>;
+            <<< "DFS", "" >>>;
             mc.DFS( i%27 );
+            mc.unmarkNodes();
         }
         i++;
     }
@@ -106,6 +109,26 @@ fun void changeDims() {
         mc.tc.dim.size(nuNum);
         for( 0 => int i; i < nuNum; i++ ) {
             nuDim[i] @=> mc.tc.dim[i];
+        }
+    }
+}
+
+fun void specialSauce() {
+    0 => int check;
+    while( true ) {
+        for( 0 => int i; i < mc.port.sensor.cap(); i ++ ) {
+            // see if all the sensors are activated
+            if( mc.port.sensor[i] < 71 ) check ++;
+        }
+        if( check == 4 ) {
+            // do something special
+            chout <= "SPECIAL SAAAAAUUUUUUUUCE!!!!!";
+            chout.flush();
+            mc.sSauce();
+            0 => check;
+        } else {
+            mc.unmarkNodes(); // clear the nodes for later
+            0 => check;
         }
     }
 }
