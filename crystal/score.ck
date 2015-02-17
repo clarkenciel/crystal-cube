@@ -25,10 +25,12 @@ while( ms => now );
 fun void choose() {
     int i;
     [-1, 1] @=> int c[];
+    <<< "choose", me.id() >>>;
 
     while( true ) {
         laundry(0, mc.port.sensor[0])*10 @=> mc.gliss[0];
         laundry(1, mc.port.sensor[1])*10 @=> mc.gliss[1];
+        //<<< laundry(0, mc.port.sensor[0]), laundry(0, mc.port.sensor[1])>>>;
         
         Math.random2(0,2) => choice;
         
@@ -36,21 +38,25 @@ fun void choose() {
             //<<< "BFS", "" >>>; 
             mc.BFS(i % 27);
             mc.unmarkNodes();
+            //mc.tc.printCrystal();
         } else if( choice == 1 ){
             //<<< "in order", "" >>>;
             1 => int d;
             mc.inOrder( i % 27, d  );
             mc.unmarkNodes();
+            //mc.tc.printCrystal();
         } else if( choice == 2 ) {
             //<<< "DFS", "" >>>;
             mc.DFS( i%27 );
             mc.unmarkNodes();
+            //mc.tc.printCrystal();
         }
         i++;
     }
 }
 
 fun float fir(int idx, float val) {
+    //<<< "fir", me.id() >>>;
     float sum;
     for (num - 2 => int i; i >= 0; i--) {
          filtered_sensor[idx][i] => filtered_sensor[idx][i + 1];
@@ -63,11 +69,13 @@ fun float fir(int idx, float val) {
 }
 
 fun float std( float arr[] ) {
+    //<<< "std", me.id() >>>;
     float sum, mn;
     float std_arr[num];
     for( int i; i < num; i ++ ) {
         arr[i] +=> sum;
     }
+
     sum/num => mn;
     for( int i; i < num; i++ ) {
         arr[i] - mn => std_arr[i];
@@ -84,14 +92,16 @@ fun float std( float arr[] ) {
 }
 
 fun float laundry(int idx, float val) {
+    //<<< "laundry", me.id() >>>;
     fir(idx, val);
     return std(filtered_sensor[idx]);
 }
 
 fun void changePulse() {
-    100::ms => dur rate;
+    <<< "changePulse", me.id() >>>;
+    50::ms => dur rate;
     50::ms => dur inc;
-    2::ms => dur dec;
+    5::ms => dur dec;
     
     while( true ) {
         for( 0 => int i; i < 2; i ++  ) {
@@ -108,6 +118,7 @@ fun void changePulse() {
 }
 
 fun void mutate() {
+    <<< "mutate", me.id() >>>;
     float m;
     int c;
     while( 500::ms => now ) {
@@ -119,6 +130,7 @@ fun void mutate() {
 }
 
 fun void deMutate() {
+    <<< "demutate", me.id() >>>;
     float dif;
     while( 1500::ms => now ) {
         mc.tc.mutateVar - 1.0 => dif; 
@@ -131,6 +143,7 @@ fun void deMutate() {
         
 
 fun void changeBase() {
+    
     float nuBase;
     [-1, 1] @=> int choice[];
     while( true ) {
@@ -145,18 +158,16 @@ fun void changeBase() {
 }
 
 fun void changeDims() {
-    int nuNum;
-    float nuDim[];
-    [2.0, 3.0, 5.0, 7.0, 11.0, 13.0, 17.0] @=> float nuDims[];
+    <<< "changedims", me.id() >>>;
+    float nuDim[3];
+    [2.0, 3.0, 5.0 ] @=> float nuDims[];
     minute => now;
     while( minute => now ) {
-        3 => nuNum;
-        nuDim.size( nuNum );
-        for( 0 => int i; i < nuNum; i++ ) {
-            nuDims[ Math.random2(0, nuDims.cap()) ] @=> nuDim[i];
+        for( 0 => int i; i < nuDim.cap(); i++ ) {
+            nuDims[ Math.random2(0, nuDims.cap()-1) ] @=> nuDim[i];
         }
-        mc.tc.dim.size(nuNum);
-        for( 0 => int i; i < nuNum; i++ ) {
+        mc.tc.dim.size(nuDim.cap());
+        for( 0 => int i; i < mc.tc.dim.cap(); i++ ) {
             nuDim[i] @=> mc.tc.dim[i];
         }
     }
@@ -184,27 +195,23 @@ fun void specialSauce() {
 
 fun void offOn( float a ) {
     // send 0 to all arduinos & change the multplier for all the algs 
+    <<< "offOn", me.id() >>>;
     mc.kill();
     a => mc.active;
 }
 
 fun void stopListen() {
+    <<< "stopListen", me.id() >>>;
     KBHit space;
     int check;
-    <<< "---------------------- press space bar to turn off/on --------------------------" >>>;
+    <<< "---------------------- PRESS SPACE BAR TO TURN OFF/ON --------------------------", "" >>>;
     while( true ) {
         space => now;
         while( space.more() ) {
             space.getchar() => int s;
-            if( s == 32 && check == 0 ) {
-                offOn(0);
-                1 => check;
-                <<< "off", "" >>>;
-            }
-            if( s == 32 && check == 1 ) {
-                <<< "on", "" >>>;
-                offOn(1);
-                0=>check;
+            if(s == 32) {
+                offOn(check);
+                (check + 1) % 2 => check;
             }
         }
     }

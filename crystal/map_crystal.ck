@@ -52,9 +52,9 @@ public class MapCrystal {
    Node queue[0];
    TCrystal tc;
    Port port;
-   int unQ[0];
+   //int unQ[0];
    dur pulse;
-   float gliss[4];
+   float gliss[2];
    1.0 => float active;
    1 => int offset;
 
@@ -68,9 +68,7 @@ public class MapCrystal {
         for( 0 => int i; i < gliss.cap(); i ++ ) {
             0.0 @=> gliss[i];
         }
-        <<< "kicking off port","" >>>;
         port.init();
-        <<< "port cleared","" >>>;
         2::second => now;
    }
 
@@ -131,7 +129,7 @@ public class MapCrystal {
 
         nodes[id].mark(); // mark node as visited
         //<<< "Node", id, "Marked" >>>;
-        unQ << id;
+        //unQ << id;
         
         // safety for first run
         // also, init tenney crystal
@@ -145,14 +143,10 @@ public class MapCrystal {
         // grow the crystal by one step and send the frequency
         tc.lastNote(0) => float nFreq;
         float g;
-        if( id == 0 || id == 1 || id == 3 || id == 4 ) {
+        if( id == 0 || id == 1 || id == 2 || id ==3 || id==4 || id==5  ) {
             gliss[0] @=> g;
-        } else if( id == 1 || id == 2 || id == 4 || id == 5 ) {
+        } else if( id == 3 || id == 4 || id == 5 || id == 6 || id==7 || id==8 ) {
             gliss[1] @=> g;
-        } else if( id == 3 || id == 4 || id == 6 || id == 7 ) {
-            gliss[2] @=> g;
-        } else if( id == 4 || id == 5 || id == 7 || id == 8 ) {
-            gliss[3] @=> g;
         }
         Math.random2f( -1*g, g) => g;
         port.note( nodes[id].coords[0] + offset, nodes[id].coords[1],(nFreq + g) * active);
@@ -199,15 +193,11 @@ public class MapCrystal {
                 tc.lastNote(0) => nFreq;
                 
                 float g;
-                if( place == 0 || place == 1 || place == 3 || place == 4 ) {
+                if( place == 0 || place == 1 || place == 2 || place ==3 || place==4 || place==5  ) {
                     gliss[0] @=> g;
-                } else if( place == 1 || place == 2 || place == 4 || place == 5 ) {
+                } else if( place == 3 || place == 4 || place == 5 || place== 6 || place==7 || place==8 ) {
                     gliss[1] @=> g;
-                } else if( place == 3 || place == 4 || place == 6 || place == 7 ) {
-                    gliss[2] @=> g;
-                } else if( place == 4 || place == 5 || place == 7 || place == 8 ) {
-                    gliss[3] @=> g;
-                }
+                } 
                 Math.random2f( -1*g, g) => g;
                 port.note( nodes[place].coords[0] + offset, nodes[place].coords[1],(nFreq + g) * active);
                 //<<< nFreq+g,"Sent","">>>;
@@ -223,21 +213,17 @@ public class MapCrystal {
 
         nodes[id].mark(); // mark node
         //<<< "Node", id, "Marked" >>>;
-        unQ << id;
+        //unQ << id;
         //<<< "new crystal" >>>;
         tc.init(); 
 
         tc.lastNote(0) => float nFreq;
         
         float g;
-        if( id == 0 || id == 1 || id == 3 || id == 4 ) {
+        if( id == 0 || id == 1 || id == 2 || id ==3 || id==4 || id==5  ) {
             gliss[0] @=> g;
-        } else if( id == 1 || id == 2 || id == 4 || id == 5 ) {
+        } else if( id == 3 || id == 4 || id == 5 || id == 6 || id==7 || id==8 ) {
             gliss[1] @=> g;
-        } else if( id == 3 || id == 4 || id == 6 || id == 7 ) {
-            gliss[2] @=> g;
-        } else if( id == 4 || id == 5 || id == 7 || id == 8 ) {
-            gliss[3] @=> g;
         }
         Math.random2f( -1*g, g) => g;
         port.note( nodes[id].coords[0] + offset, nodes[id].coords[1],(nFreq + g) * active);
@@ -260,19 +246,15 @@ public class MapCrystal {
     fun void DFS( int id,  int check ) {
         nodes[id].mark(); // mark node
         //<<< "Node", id, "Marked" >>>;
-        unQ << id;
+        //unQ << id;
 
         tc.lastNote(0) => float nFreq;
         
         float g;
-        if( id == 0 || id == 1 || id == 3 || id == 4 ) {
+        if( id == 0 || id == 1 || id == 2 || id ==3 || id==4 || id==5  ) {
             gliss[0] @=> g;
-        } else if( id == 1 || id == 2 || id == 4 || id == 5 ) {
+        } else if( id == 3 || id == 4 || id == 5 || id == 6 || id==7 || id==8 ) {
             gliss[1] @=> g;
-        } else if( id == 3 || id == 4 || id == 6 || id == 7 ) {
-            gliss[2] @=> g;
-        } else if( id == 4 || id == 5 || id == 7 || id == 8 ) {
-            gliss[3] @=> g;
         }
         Math.random2f( -1*g, g) => g;
         port.note( nodes[id].coords[0] + offset, nodes[id].coords[1],(nFreq + g) * active);
@@ -287,7 +269,7 @@ public class MapCrystal {
             }
         }
     }
-
+    /*
     fun void unPulse( float mod ) {
         for( 0 => int i; i < unQ.cap(); i++ ) {
             <<< "Unpulse:",i+1,"">>>;
@@ -300,7 +282,7 @@ public class MapCrystal {
     fun void unPulse() {
         unPulse( 1.0 );
     }
-
+    */
     // ------------------------SUPPORT FUNCS-----------------
 
     fun void unmarkNodes() {

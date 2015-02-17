@@ -93,8 +93,7 @@ public class Port {
             serial[i].getByte() => int ID;
             // sets arduino ID array
             ID => arduinoID[i];
-            <<< ID, "" >>>;
-            300::ms => now;
+            10::ms => now;
         }
     }
 
