@@ -1,5 +1,6 @@
 // TenneyArray.ck
 // Implementation of James Tenney's cyrstal growth formula for harmonic space
+// Freq Limits: 3000 Hz - 12000 Hz
 // Author: Danny Clarke
 
 public class TenneyArray {
