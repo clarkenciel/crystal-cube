@@ -166,9 +166,6 @@ int byteUnpack(byte in[], int num_bytes) {
   return val;
 }
 
-float s1, s2, s3, s4;
-float amp1, amp2, amp3, amp4;
-
 float freq;
 byte bytes[6];
 
@@ -176,37 +173,27 @@ void loop() {
   if (Serial.available()) {
     Serial.readBytes((char*)bytes, 6);
 
-    if (byte(bytes[4]) == 0xff) {
-      switch (bytes[3]) {
+    if (byte(bytes[5]) == 0xff) {
+      switch (bytes[4]) {
       case 0:
-        o1.amplitude = amp1 * 256;
+        o1.amplitude = 0Xff * bytes[3];
         o1.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
         break;
       case 1:
-        o2.amplitude = amp1 * 256;
+        o2.amplitude = 0Xff * bytes[3];
         o2.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
         break;
       case 2:
-        o3.amplitude = amp1 * 256;
+        o3.amplitude = 0Xff * bytes[3];
         o3.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
         break;
       case 3:
-        o4.amplitude = amp1 * 256;
+        o4.amplitude = 0Xff * bytes[3];
         o4.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
         break;
       }
-
-      //long freq = byteUnpack(bytes, 3);
     }
   }
-  o1.phase_increment = phaseinc(frq);
-  o1.amplitude = amp1 * 256;
-  o2.phase_increment = phaseinc(frq * 5.0/4.0);
-  o2.amplitude = amp2 * 256;
-  o3.phase_increment = phaseinc(frq * 3.0/2.0);
-  o3.amplitude = amp3 * 256;
-  o4.phase_increment = phaseinc(frq);
-  o4.amplitude = amp4 * 256;
 }
 
 // "this is the heart of the wavetable synthesis, 
