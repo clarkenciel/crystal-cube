@@ -1,32 +1,36 @@
 // piezo_sine_waves.ino
-// Eric Heep, April 2015
+
+// Eric Heep
+// April, 2015
 
 // indebted to Adrian Freed's High Frequency Sine Wave code
 // modifed to receive serial and play four independant
 // sine waves simulanteously on an Arduino Uno
 
-// Adrian Freed comments ~ 
-// Atmega table-based digital oscillator
+// Adrian Freed comments are in quotes ~ 
+// "Atmega table-based digital oscillator
 // using "DDS" with 32-bit phase register to illustrate efficient
 // accurate frequency.
 // 20-bits is on the edge of people pitch perception
 // 24-bits has been the usual resolution employed.
 // so we use 32-bits in C, i.e. long.
-
+//
 // smoothly interpolates frequency and amplitudes illustrating
 // lock-free approach to synchronizing foreground process  control and background (interrupt)
 // sound synthesis
 // copyright 2009. Adrian Freed. All Rights Reserved.
 // Use this as you will but include attribution in derivative works.>
-// tested on the Arduino Mega
+// tested on the Arduino Mega"
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 
+// ID number of the arduino, each robot must have a different one
+#define arduinoID 2
 
-
-// look Up Table size: has to be power of 2 so that the modulo LUTsize
-// can be done by picking bits from the phase avoiding arithmetic
+// "look Up Table size: has to be power of 2 so that the modulo LUTsize
+// can be done by picking bits from the phase avoiding arithmetic"
 const unsigned int LUTsize = 1 << 8;
 
 int8_t sintable[LUTsize] PROGMEM = {
@@ -50,8 +54,6 @@ int8_t sintable[LUTsize] PROGMEM = {
 
 const int timerPrescale=1<<9;
 
-#define NUM_OSCS 3
-
 struct oscillator
 {
   uint32_t phase;
@@ -63,8 +65,7 @@ struct oscillator
 }
 o1, o2, o3, o4;
 
-
-// 16 bit fractional phase
+// "16 bit fractional phase"
 const int fractionalbits = 16; 
 
 // compute a phase increment from a frequency
@@ -73,14 +74,14 @@ unsigned long phaseinc(float frequency_in_Hz)
   return LUTsize *(1l<<fractionalbits)* frequency_in_Hz/(F_CPU/timerPrescale);
 }
 
-// The above requires floating point and is robust for a wide range of parameters
+// "The above requires floating point and is robust for a wide range of parameters
 // If we constrain the parameters and take care we can go much
 // faster with integer arithmetic
 // We control the calculation order to avoid overflow or resolution loss
 //
 // we chose "predivide" so that (pow(2,predivide) divides F_CPU,so 4MHz (1.7v), 8Mhz, 12Mhz (3.3v) and 16Mhz 20Mhz all work
 // AND note that "frequency_in_Hz" is not too large. We only have about 16Khz bandwidth to play with on
-// Arduino timers anyway
+// Arduino timers anyway"
 const int predivide = 8;
 
 unsigned long phaseinc_from_fractional_frequency(unsigned long frequency_in_Hz_times_256)
@@ -93,6 +94,7 @@ unsigned long phaseinc_from_fractional_frequency(unsigned long frequency_in_Hz_t
 #define PWM_PIN3 11 //2A
 #define PWM_PIN4 3  //2B
 
+// sets up PWM Pins
 #define PWM_VALUE_DESTINATION1 OCR1A
 #define PWM_VALUE_DESTINATION2 OCR1B
 #define PWM_VALUE_DESTINATION3 OCR2A
@@ -101,6 +103,9 @@ unsigned long phaseinc_from_fractional_frequency(unsigned long frequency_in_Hz_t
 void initializeTimer() {
 
   cli();
+
+  // for some reason it sounds cleaner
+  // when we activate timer 0
   TCCR0A = B00100001;
   TCCR0B = B00000001;
   TIMSK0 = 1;
@@ -149,44 +154,51 @@ void setup() {
   o4.framecounter = 0;
   o4.amplitude = 255 * 256;
 
-
   initializeTimer();
   Serial.begin(9600);
 }
 
-long byteUnpack(byte in[], int num_bytes) {  
+int byteUnpack(byte in[], int num_bytes) {  
   long val = 0;
   for (int i = 0; i < num_bytes; i++) {
     val += in[i] << (i * 8);
   }
-
   return val;
 }
 
 float s1, s2, s3, s4;
 float amp1, amp2, amp3, amp4;
 
-int freq;
-byte bytes[4];
+float freq;
+byte bytes[6];
 
 void loop() {
   if (Serial.available()) {
-    Serial.readBytes((char*)bytes, 4);
+    Serial.readBytes((char*)bytes, 6);
 
-    if (byte(bytes[3]) == 0xff) {
-      long freq = byteUnpack(bytes, 3);
-      //o1.phase_increment = phaseinc(freq);
+    if (byte(bytes[4]) == 0xff) {
+      switch (bytes[3]) {
+      case 0:
+        o1.amplitude = amp1 * 256;
+        o1.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
+        break;
+      case 1:
+        o2.amplitude = amp1 * 256;
+        o2.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
+        break;
+      case 2:
+        o3.amplitude = amp1 * 256;
+        o3.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
+        break;
+      case 3:
+        o4.amplitude = amp1 * 256;
+        o4.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
+        break;
+      }
+
+      //long freq = byteUnpack(bytes, 3);
     }
   }
-  int frq = 3000;
-  s1 = s1 + 0.01;
-  amp1 = (sin(s1) + 1) * 128;
-  s2 = s2 + 0.015;
-  amp2 = (sin(s2) + 1) * 128;
-  s3 = s3 + 0.02;
-  amp3 = (sin(s3) + 1) * 128;
-  s4 = s4 + 0.03;
-  amp4 = (sin(s4) + 1) * 128;
   o1.phase_increment = phaseinc(frq);
   o1.amplitude = amp1 * 256;
   o2.phase_increment = phaseinc(frq * 5.0/4.0);
@@ -197,20 +209,14 @@ void loop() {
   o4.amplitude = amp4 * 256;
 }
 
-// this is the heart of the wavetable synthesis. A phasor looks up a sine table
+// "this is the heart of the wavetable synthesis, 
+// a phasor looks up a sine table"
 int8_t outputvalue1 = 0;
 int8_t outputvalue2 = 0;
 int8_t outputvalue3 = 0;
 int8_t outputvalue4 = 0;
 
-/*SIGNAL(TIMER0_OVF_vect)
- {
- //output first to minimize jitter
- PWM_VALUE_DESTINATION0 = outputvalue0; 
- outputvalue0 = (((uint8_t)(o0.amplitude>>8)) * pgm_read_byte(sintable+((o0.phase>>16)%LUTsize)))>>8;
- o0.phase += (uint32_t)o0.phase_increment;
- }*/
-
+// PWM Pin 9 and 10
 SIGNAL(TIMER1_OVF_vect)
 {
   PWM_VALUE_DESTINATION1 = outputvalue1; 
@@ -222,6 +228,7 @@ SIGNAL(TIMER1_OVF_vect)
   o2.phase += (uint32_t)o2.phase_increment;
 }
 
+// PWM Pin 11 and 3
 SIGNAL(TIMER2_OVF_vect)
 {
 
@@ -233,11 +240,6 @@ SIGNAL(TIMER2_OVF_vect)
   outputvalue4 = (((uint8_t)(o4.amplitude>>8)) * pgm_read_byte(sintable+((o4.phase>>16)%LUTsize)))>>8;
   o4.phase += (uint32_t)o4.phase_increment;
 }
-
-
-
-
-
 
 
 
