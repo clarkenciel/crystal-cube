@@ -1,3 +1,11 @@
+// piezo_sine_waves.ino
+// Eric Heep, April 2015
+
+// indebted to Adrian Freed's High Frequency Sine Wave code
+// modifed to receive serial and play four independant
+// sine waves simulanteously on an Arduino Uno
+
+// Adrian Freed comments ~ 
 // Atmega table-based digital oscillator
 // using "DDS" with 32-bit phase register to illustrate efficient
 // accurate frequency.
@@ -15,8 +23,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 
-int freq;
-byte bytes[4];
+
 
 // look Up Table size: has to be power of 2 so that the modulo LUTsize
 // can be done by picking bits from the phase avoiding arithmetic
@@ -42,6 +49,9 @@ int8_t sintable[LUTsize] PROGMEM = {
 };
 
 const int timerPrescale=1<<9;
+
+#define NUM_OSCS 3
+
 struct oscillator
 {
   uint32_t phase;
@@ -50,8 +60,9 @@ struct oscillator
   int16_t amplitude;
   int16_t amplitude_increment;
   uint32_t framecounter;
-} 
-o1;
+}
+o1, o2, o3, o4;
+
 
 // 16 bit fractional phase
 const int fractionalbits = 16; 
@@ -77,27 +88,70 @@ unsigned long phaseinc_from_fractional_frequency(unsigned long frequency_in_Hz_t
   return (1l<<(fractionalbits-predivide))* ((LUTsize*(timerPrescale/(1<<predivide))*frequency_in_Hz_times_256)/(F_CPU/(1<<predivide)));
 }
 
-#define PWM_PIN 3
-#define PWM_VALUE_DESTINATION OCR2B
+#define PWM_PIN1 9  //1A
+#define PWM_PIN2 10 //1B
+#define PWM_PIN3 11 //2A
+#define PWM_PIN4 3  //2B
 
-#define PWM_INTERRUPT TIMER2_OVF_vect
+#define PWM_VALUE_DESTINATION1 OCR1A
+#define PWM_VALUE_DESTINATION2 OCR1B
+#define PWM_VALUE_DESTINATION3 OCR2A
+#define PWM_VALUE_DESTINATION4 OCR2B
 
 void initializeTimer() {
-  TCCR2A = _BV(COM2B1) | _BV(WGM20);
-  TCCR2B = _BV(CS20);
-  TIMSK2 = _BV(TOIE2);
-  pinMode(PWM_PIN,OUTPUT);
+
+  cli();
+  TCCR0A = B00100001;
+  TCCR0B = B00000001;
+  TIMSK0 = 1;
+
+  TCCR1A = B10100001;
+  TCCR1B = B00000001;
+  TIMSK1 = 1;
+
+  TCCR2A = B10100001;
+  TCCR2B = B00000001;
+  TIMSK2 = 1;
+  sei();
+
+  pinMode(PWM_PIN1,OUTPUT);
+  pinMode(PWM_PIN2,OUTPUT);
+  pinMode(PWM_PIN3,OUTPUT);
+  pinMode(PWM_PIN4,OUTPUT);
 }
 
-void setup() {
-  Serial.begin(9600);
+void setup() { 
   o1.phase = 0;
   o1.phase_increment = 0;
   o1.amplitude_increment = 0;
   o1.frequency_increment = 0;
   o1.framecounter = 0;
   o1.amplitude = 255 * 256;
+
+  o2.phase = 0;
+  o2.phase_increment = 0;
+  o2.amplitude_increment = 0;
+  o2.frequency_increment = 0;
+  o2.framecounter = 0;
+  o2.amplitude = 255 * 256;
+
+  o3.phase = 0;
+  o3.phase_increment = 0;
+  o3.amplitude_increment = 0;
+  o3.frequency_increment = 0;
+  o3.framecounter = 0;
+  o3.amplitude = 255 * 256;
+
+  o4.phase = 0;
+  o4.phase_increment = 0;
+  o4.amplitude_increment = 0;
+  o4.frequency_increment = 0;
+  o4.framecounter = 0;
+  o4.amplitude = 255 * 256;
+
+
   initializeTimer();
+  Serial.begin(9600);
 }
 
 long byteUnpack(byte in[], int num_bytes) {  
@@ -109,23 +163,86 @@ long byteUnpack(byte in[], int num_bytes) {
   return val;
 }
 
+float s1, s2, s3, s4;
+float amp1, amp2, amp3, amp4;
+
+int freq;
+byte bytes[4];
+
 void loop() {
   if (Serial.available()) {
     Serial.readBytes((char*)bytes, 4);
 
     if (byte(bytes[3]) == 0xff) {
       long freq = byteUnpack(bytes, 3);
-      o1.phase_increment = phaseinc(freq);
+      //o1.phase_increment = phaseinc(freq);
     }
   }
+  int frq = 3000;
+  s1 = s1 + 0.01;
+  amp1 = (sin(s1) + 1) * 128;
+  s2 = s2 + 0.015;
+  amp2 = (sin(s2) + 1) * 128;
+  s3 = s3 + 0.02;
+  amp3 = (sin(s3) + 1) * 128;
+  s4 = s4 + 0.03;
+  amp4 = (sin(s4) + 1) * 128;
+  o1.phase_increment = phaseinc(frq);
+  o1.amplitude = amp1 * 256;
+  o2.phase_increment = phaseinc(frq * 5.0/4.0);
+  o2.amplitude = amp2 * 256;
+  o3.phase_increment = phaseinc(frq * 3.0/2.0);
+  o3.amplitude = amp3 * 256;
+  o4.phase_increment = phaseinc(frq);
+  o4.amplitude = amp4 * 256;
 }
 
 // this is the heart of the wavetable synthesis. A phasor looks up a sine table
-int8_t outputvalue = 0;
-SIGNAL(PWM_INTERRUPT)
+int8_t outputvalue1 = 0;
+int8_t outputvalue2 = 0;
+int8_t outputvalue3 = 0;
+int8_t outputvalue4 = 0;
+
+/*SIGNAL(TIMER0_OVF_vect)
+ {
+ //output first to minimize jitter
+ PWM_VALUE_DESTINATION0 = outputvalue0; 
+ outputvalue0 = (((uint8_t)(o0.amplitude>>8)) * pgm_read_byte(sintable+((o0.phase>>16)%LUTsize)))>>8;
+ o0.phase += (uint32_t)o0.phase_increment;
+ }*/
+
+SIGNAL(TIMER1_OVF_vect)
 {
-  //output first to minimize jitter
-  PWM_VALUE_DESTINATION = outputvalue; 
-  outputvalue = (((uint8_t)(o1.amplitude>>8)) * pgm_read_byte(sintable+((o1.phase>>16)%LUTsize)))>>8;
+  PWM_VALUE_DESTINATION1 = outputvalue1; 
+  outputvalue1 = (((uint8_t)(o1.amplitude>>8)) * pgm_read_byte(sintable+((o1.phase>>16)%LUTsize)))>>8;
   o1.phase += (uint32_t)o1.phase_increment;
+
+  PWM_VALUE_DESTINATION2 = outputvalue2; 
+  outputvalue2 = (((uint8_t)(o2.amplitude>>8)) * pgm_read_byte(sintable+((o2.phase>>16)%LUTsize)))>>8;
+  o2.phase += (uint32_t)o2.phase_increment;
 }
+
+SIGNAL(TIMER2_OVF_vect)
+{
+
+  PWM_VALUE_DESTINATION3 = outputvalue3; 
+  outputvalue3 = (((uint8_t)(o3.amplitude>>8)) * pgm_read_byte(sintable+((o3.phase>>16)%LUTsize)))>>8;
+  o3.phase += (uint32_t)o3.phase_increment;
+
+  PWM_VALUE_DESTINATION4 = outputvalue4; 
+  outputvalue4 = (((uint8_t)(o4.amplitude>>8)) * pgm_read_byte(sintable+((o4.phase>>16)%LUTsize)))>>8;
+  o4.phase += (uint32_t)o4.phase_increment;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

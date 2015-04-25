@@ -1,9 +1,12 @@
-// chuck_to_piezo.ino
+// piezo_square_waves.ino
 
 // Eric Heep
+// February, 2015
+
 // recieves messages from ChucK to simultaneously 
 // control multiple piezo speakers, created for the
 // Crystal Cube installation in collaboration with Danny Clarke
+// final code used in the first iteration of the installation
 
 // ID number of the arduino, each robot must have a different one
 #define arduinoID 6
