@@ -62,7 +62,7 @@ public class Port {
     // opens only how many serial ports there are usb ports connected
     fun void openPorts() {
         for (int i; i < serial.cap(); i++) {
-            if (!serial[i].open(serial_port[i], SerialIO.B9600, SerialIO.BINARY)) {
+            if (!serial[i].open(serial_port[i], SerialIO.B28800, SerialIO.BINARY)) {
                 <<< "Unable to open serial device:", "\t", list[serial_port[i]] >>>;
             }
             else {
@@ -102,8 +102,7 @@ public class Port {
         return bytes;
     }
 
-    // sends serial, allows note numbers 0-32
-    // and phase increment 0-134217728 
+    // sends serial
     fun void note(int ID, int num, float frq, float amp) {
         int bytes[6];  
     
@@ -141,15 +140,15 @@ public class Port {
     }
 }
 
+/*
 Port p;
 p.init();
 
 1::second => now;
-
+int inc;
 while (true) {  
-    p.note(2, 0, Math.random2(8000, 9000), 1.0);
-    p.note(2, 1, Math.random2(8000, 9000), 1.0);
-    //p.note(2, 2, Math.random2(8000, 9000), 1.0);
-    //p.note(2, 3, Math.random2(8000, 9000), 1.0);
-    2000::ms => now;
+    inc++; 
+    p.note(2, 0, inc, 1.0);
+    200::ms => now;
 }
+*/

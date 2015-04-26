@@ -30,6 +30,7 @@
 #define arduinoID 2
 byte handshake;
 byte bytes[6];
+float mult = 0.01;
 
 // "look Up Table size: has to be power of 2 so that the modulo LUTsize
 // can be done by picking bits from the phase avoiding arithmetic"
@@ -67,6 +68,9 @@ struct oscillator
 }
 o1, o2, o3, o4;
 
+// to avoid overwriting frequencies
+long freq1, freq2, freq3, freq4;
+
 // "16 bit fractional phase"
 const int fractionalbits = 16; 
 
@@ -103,7 +107,6 @@ unsigned long phaseinc_from_fractional_frequency(unsigned long frequency_in_Hz_t
 #define PWM_VALUE_DESTINATION4 OCR2B
 
 void initializeTimer() {
-
   cli();
   TCCR0A = B00100001;
   TCCR0B = B00000001;
@@ -154,13 +157,13 @@ void setup() {
   o4.amplitude = 255 * 256;
 
   initializeTimer();
-  Serial.begin(9600);
+  Serial.begin(28800);
 }
 
-int byteUnpack(byte in[], int num_bytes) {  
+long byteUnpack(byte in[], int num_bytes) {  
   long val = 0;
   for (int i = 0; i < num_bytes; i++) {
-    val += in[i] << (i * 8);
+    val += long(in[i]) << (i * 8);
   }
   return val;
 }
@@ -171,20 +174,20 @@ void recieveBytes() {
   if (bytes[5] == 0xff) {
     switch (bytes[4]) {
     case 0:
-      o1.amplitude = 0xff * bytes[3];
-      o1.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
+      o1.amplitude = 256 * bytes[3];  
+      o1.phase_increment = phaseinc(byteUnpack(bytes, 3) * mult);
       break;
     case 1:
-      o2.amplitude = 0xff * bytes[3];
-      o2.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
+      o2.amplitude = 256 * bytes[3];
+      o2.phase_increment = phaseinc(byteUnpack(bytes, 3) * mult);
       break;
     case 2:
-      o3.amplitude = 0xff * bytes[3];
-      o3.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
+      o3.amplitude = 256 * bytes[3];
+      o3.phase_increment = phaseinc(byteUnpack(bytes, 3) * mult);
       break;
     case 3:
-      o4.amplitude = 0xff * bytes[3];
-      o4.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
+      o4.amplitude = 256 * bytes[3];
+      o4.phase_increment = phaseinc(byteUnpack(bytes, 3) * mult);
       break;
     }
   }
@@ -241,3 +244,4 @@ SIGNAL(TIMER2_OVF_vect)
   outputvalue4 = (((uint8_t)(o4.amplitude>>8)) * pgm_read_byte(sintable+((o4.phase>>16)%LUTsize)))>>8;
   o4.phase += (uint32_t)o4.phase_increment;
 }
+
