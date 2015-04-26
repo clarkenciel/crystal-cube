@@ -28,6 +28,8 @@
 
 // ID number of the arduino, each robot must have a different one
 #define arduinoID 2
+byte handshake;
+byte bytes[6];
 
 // "look Up Table size: has to be power of 2 so that the modulo LUTsize
 // can be done by picking bits from the phase avoiding arithmetic"
@@ -103,9 +105,6 @@ unsigned long phaseinc_from_fractional_frequency(unsigned long frequency_in_Hz_t
 void initializeTimer() {
 
   cli();
-
-  // for some reason it sounds cleaner
-  // when we activate timer 0
   TCCR0A = B00100001;
   TCCR0B = B00000001;
   TIMSK0 = 1;
@@ -166,33 +165,49 @@ int byteUnpack(byte in[], int num_bytes) {
   return val;
 }
 
-float freq;
-byte bytes[6];
+// recieves bytes from ChucK for unpacking
+void recieveBytes() {
+  Serial.readBytes((char*)bytes, 6);
+  if (bytes[5] == 0xff) {
+    switch (bytes[4]) {
+    case 0:
+      o1.amplitude = 0xff * bytes[3];
+      o1.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
+      break;
+    case 1:
+      o2.amplitude = 0xff * bytes[3];
+      o2.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
+      break;
+    case 2:
+      o3.amplitude = 0xff * bytes[3];
+      o3.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
+      break;
+    case 3:
+      o4.amplitude = 0xff * bytes[3];
+      o4.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
+      break;
+    }
+  }
+}
+
+// intializes communication
+void sendID() {
+  byte initialize[2];
+  Serial.readBytes((char*)initialize, 2);
+
+  // sends back arduino ID if handshake matches
+  if (initialize[0] == 0xff && initialize[1] == 0xff) { 
+    Serial.write(arduinoID);
+    handshake = 1;
+  } 
+}
 
 void loop() {
-  if (Serial.available()) {
-    Serial.readBytes((char*)bytes, 6);
-
-    if (byte(bytes[5]) == 0xff) {
-      switch (bytes[4]) {
-      case 0:
-        o1.amplitude = 0Xff * bytes[3];
-        o1.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
-        break;
-      case 1:
-        o2.amplitude = 0Xff * bytes[3];
-        o2.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
-        break;
-      case 2:
-        o3.amplitude = 0Xff * bytes[3];
-        o3.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
-        break;
-      case 3:
-        o4.amplitude = 0Xff * bytes[3];
-        o4.phase_increment = phaseinc(byteUnpack(bytes, 3) * 1e-3);
-        break;
-      }
-    }
+  if (Serial.available() && handshake == 1) {
+    recieveBytes();
+  }
+  else if (Serial.available() && handshake == 0) {
+    sendID();
   }
 }
 
@@ -218,7 +233,6 @@ SIGNAL(TIMER1_OVF_vect)
 // PWM Pin 11 and 3
 SIGNAL(TIMER2_OVF_vect)
 {
-
   PWM_VALUE_DESTINATION3 = outputvalue3; 
   outputvalue3 = (((uint8_t)(o3.amplitude>>8)) * pgm_read_byte(sintable+((o3.phase>>16)%LUTsize)))>>8;
   o3.phase += (uint32_t)o3.phase_increment;
@@ -227,11 +241,3 @@ SIGNAL(TIMER2_OVF_vect)
   outputvalue4 = (((uint8_t)(o4.amplitude>>8)) * pgm_read_byte(sintable+((o4.phase>>16)%LUTsize)))>>8;
   o4.phase += (uint32_t)o4.phase_increment;
 }
-
-
-
-
-
-
-
-
