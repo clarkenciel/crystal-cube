@@ -114,7 +114,7 @@ void sendID() {
   char initialize[2];
   Serial.readBytes(initialize, 2);
 
-  // sends back arduion ID if handshake matches
+  // sends back arduino ID if handshake matches
   if (byte(initialize[0]) == 255 && byte(initialize[1]) == 255) { 
     Serial.write(arduinoID);
     handshake = 1;
