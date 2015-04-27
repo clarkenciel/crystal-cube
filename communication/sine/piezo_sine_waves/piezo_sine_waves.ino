@@ -27,10 +27,10 @@
 #include <avr/pgmspace.h>
 
 // ID number of the arduino, each robot must have a different one
-#define arduinoID 2
+#define arduinoID 8
 byte handshake;
 byte bytes[6];
-float mult = 0.01;
+float mult = 0.001;
 
 // "look Up Table size: has to be power of 2 so that the modulo LUTsize
 // can be done by picking bits from the phase avoiding arithmetic"
@@ -160,6 +160,7 @@ void setup() {
   Serial.begin(28800);
 }
 
+// unpacking function
 long byteUnpack(byte in[], int num_bytes) {  
   long val = 0;
   for (int i = 0; i < num_bytes; i++) {
@@ -168,7 +169,7 @@ long byteUnpack(byte in[], int num_bytes) {
   return val;
 }
 
-// recieves bytes from ChucK for unpacking
+// recieves bytes from ChucK for assignment
 void recieveBytes() {
   Serial.readBytes((char*)bytes, 6);
   if (bytes[5] == 0xff) {
@@ -205,6 +206,7 @@ void sendID() {
   } 
 }
 
+// main loop
 void loop() {
   if (Serial.available() && handshake == 1) {
     recieveBytes();
@@ -244,4 +246,3 @@ SIGNAL(TIMER2_OVF_vect)
   outputvalue4 = (((uint8_t)(o4.amplitude>>8)) * pgm_read_byte(sintable+((o4.phase>>16)%LUTsize)))>>8;
   o4.phase += (uint32_t)o4.phase_increment;
 }
-

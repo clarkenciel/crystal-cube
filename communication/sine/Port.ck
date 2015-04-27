@@ -137,18 +137,22 @@ public class Port {
         else {
             <<< "No matching port for Arduino ID", ID >>>;
         }
+        100::samp => now;
     }
 }
 
-/*
 Port p;
 p.init();
 
 1::second => now;
-int inc;
-while (true) {  
-    inc++; 
-    p.note(2, 0, inc, 1.0);
-    200::ms => now;
-}
-*/
+8 => int ID;
+
+//while (true) {  
+    p.note(ID, 0, Math.random2(8000,8100), 1.0);
+    2::second => now;
+    p.note(ID, 1, Math.random2(8000,8100), 1.0);
+    2::second => now;
+    p.note(ID, 3, Math.random2(8000,8100), 1.0);
+    2::second => now;
+//}
+
