@@ -1,18 +1,20 @@
-// ArdCrystal.ck
+// PiezoArray.ck
 // Interface for working with Arduino sculpture
 // REQUIRES: 
 //      crystal/TennyArray.ck
 //      communication/Port.ck
 // Author: Danny clarke
 
-public class ArdCrystal {
+public class PiezoArray 
+{
     Port ard_out;
     int sines[0][4];
     TenneyArray freqCrystal;
     int connections[0][0];
     dur pulseRate;
 
-    void init( int num_ards ) {
+    void init( int num_ards ) 
+    {
         ard_out.init();
         sines.size(num_ards);
         for( int i; i < num_ards; i++ ) {
@@ -22,17 +24,20 @@ public class ArdCrystal {
         }
     }
 
-    void portOff( int p_idx ) {
+    void portOff( int p_idx ) 
+    {
         ports[p_idx];
     }
 
-    void portOn( int p_idx, float freq, float amp ) {
+    void portOn( int p_idx, float freq, float amp ) 
+    {
 
     }
 
     // generate an array of connections between piezo speakers
     //  using BFS
-    void BFS( int start_idx ) {
+    void BFS( int start_idx ) 
+    {
         int q[0];
 
         NULL @=> q;
@@ -40,7 +45,8 @@ public class ArdCrystal {
     
     // generate an array of connections between piezo speakers
     //  using DFS
-    void DFS( int start_idx ) {
+    void DFS( int start_idx ) 
+    {
         int q[0];
 
         NULL @=> q;
