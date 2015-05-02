@@ -10,7 +10,7 @@ public class Lattice
     float vals[numDimensions][0];
     [3000.0, 12000.0] @=> float lims[];
     
-    float next_val;
+    float next_val, fund;
     int curDim, curIdx;
     
     // -------------------------------MAIN FUNCTIONS--------------------------
@@ -38,6 +38,8 @@ public class Lattice
     */
     fun float[][] generate( float fundamental, int size)
     {
+        fundamental => fund;
+        
         // set up our vals array for safety
         clear();
         vals.size(numDimensions);
@@ -176,7 +178,10 @@ public class Lattice
     */
     fun float val( int dimension, int idx ) 
     {
-        return vals[dimension][idx];
+        if(dimension < vals.size() && idx < vals[dimension].size() )
+            return vals[dimension][idx];
+        else
+            return fund;
     }
     
     /*
