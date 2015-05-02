@@ -7,8 +7,11 @@ public class Lattice
 {
     3 => int numDimensions;
     [2, 3, 5] @=> int dimNumbers[];
-    float vals[0];
+    float vals[numDimensions][0];
     [3000.0, 12000.0] @=> float lims[];
+    
+    float next_val;
+    int curDim, curIdx;
     
     // -------------------------------MAIN FUNCTIONS--------------------------
     /*
@@ -23,6 +26,9 @@ public class Lattice
         for( int i; i < numDimensions; i++ ) {
             dimNums[i] => dimNumbers[i];
         }
+        vals.size(numDimensions);
+        for(int i; i < vals.size(); i++)
+            new float[0] @=> vals[i];
     }
 
     /*
@@ -30,15 +36,21 @@ public class Lattice
     * take a fundamental and generate a lattice with "size" points
     * using the dimensional information setup using Lattice.set()
     */
-    fun float[] generate( float fundamental, int size)
+    fun float[][] generate( float fundamental, int size)
     {
+        // set up our vals array for safety
+        clear();
+        vals.size(numDimensions);
+        for(int i; i < vals.size(); i++)
+            new float[0] @=> vals[i];
+        
         float coords[0][0];             // array of coordinates
         float new_coord[numDimensions]; // potential new coordinate
         float best[numDimensions];      // current best choice
         float test;
         getDist(coords, best) => float shortest_dist; // distance of the current best
-        vals.size(size);                // resize our vals array
-
+        int dimension;                  // store which dimension we're expanding in
+        
         while(coords.size() < size) {
             999 => shortest_dist;
 
@@ -46,30 +58,33 @@ public class Lattice
             for(int i; i < coords.size(); i++ ) {
                 // for each node, try expanding in each dimension
                 copy(coords[i]) @=> new_coord;
+                
                 for(int j; j < new_coord.size(); j++ ) {
-                    1 +=> new_coord[j];
+                    1.0 +=> new_coord[j];
 
                     // see if we already have that coordinate
                     if(!in(coords, new_coord)) {
                         // see if it is closer than our current best
                         getDist(coords, new_coord) => test;
-                        if(test<= shortest_dist) {
+                        if(test < shortest_dist) {
                             test => shortest_dist;
                             copy(new_coord) @=> best;
+                            j => dimension;
                         }
                     }
                     1.0 -=> new_coord[j];
                 }
             }
-
+            
+            vals[dimension].size(vals[dimension].size()+1);
+            coordToFreq(best, fundamental) @=> vals[dimension][vals[dimension].size()-1];
+            
             coords.size(coords.size() + 1);
             copy(best) @=> coords[coords.size() - 1];
+            
+            0 => dimension;
         }	
-
-        // convert our coordinates to freqs
-        for(int i; i < coords.size(); i++)    
-            coordToFreq(coords[i], fundamental) @=> vals[i];
-
+        
         NULL @=> coords;
         NULL @=> new_coord;
         NULL @=> best;
@@ -159,9 +174,31 @@ public class Lattice
     * val( index )
     * return the value stored in vals[] at the given index
     */
-    fun float val( int idx ) 
+    fun float val( int dimension, int idx ) 
     {
-        return vals[idx];
+        return vals[dimension][idx];
+    }
+    
+    /*
+    * next()
+    * return the "next" value from the value array
+    * this is to make it easier to get sequential data out of the array
+    */
+    fun float next()
+    {
+        if(vals[curDim].size() > 0) {
+            vals[curDim][curIdx] => next_val;
+            curIdx++;
+            if(curIdx >= vals[curDim].size() - 1) {
+                0 => curIdx;
+                (1 + curDim) % vals.size() => curDim;
+            }
+        } else {
+            0 => curIdx;
+            (1 + curDim) % vals.size() => curDim;
+            next();
+        }
+        return next_val;
     }
 
     /*
