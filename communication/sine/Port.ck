@@ -50,7 +50,7 @@ public class Port {
         int num;
         <<< "-", "" >>>;
         for (int i; i < serial_port.cap(); i++) {
-            if (list[i].find("usb") > 0) {
+            if (list[i].find("tty") > 0) {
                 i => serial_port[num];
                 num++;
             }
@@ -62,29 +62,40 @@ public class Port {
     // opens only how many serial ports there are usb ports connected
     fun void openPorts() {
         for (int i; i < serial.cap(); i++) {
-            if (!serial[i].open(serial_port[i], SerialIO.B28800, SerialIO.BINARY)) {
+            if (!serial[i].open(serial_port[i], SerialIO.B9600, SerialIO.BINARY)) {
                 <<< "Unable to open serial device:", "\t", list[serial_port[i]] >>>;
             }
             else {
-                <<< list[serial_port[i]], "assigned to port", serial_port[i], "" >>>;
+                <<< list[serial_port[i]], "opened on port", serial_port[i], "" >>>;
             }
         }
         <<< "-", "" >>>;
-        2.5::second => now;
+        3.0::second => now;
     }
 
     // pings the Arduinos and returns their 'arduinoID'
     fun void handshake() {
-        // flush out old messages
         [0xff, 0xff] @=> int ping[];
+        
         for (int i ; i < serial.cap(); i++) {
-            serial[i].writeBytes(ping);
-            serial[i].onByte() => now;
-            serial[i].getByte() => int ID;
+            -1 @=> int ID;
+            while (ID == -1) {
+                serial[i].writeBytes(ping);
+
+                serial[i].onByte() => now;
+                serial[i].getByte() => int arr;
+
+                if (arr == 0xff) {
+                    serial[i].onByte() => now;
+                    serial[i].getByte() => ID;
+                }
+            }
+
             // sets arduino ID array
             ID => arduinoID[i];
-            <<< ID, "" >>>;
-            300::ms => now;
+            <<< "ID", ID, "" >>>;
+
+            250::ms => now;
         }
     }
 
@@ -106,8 +117,8 @@ public class Port {
     fun void note(int ID, int num, float frq, float amp) {
         int bytes[6];  
     
-        // safety byte
-        0xff => bytes[5];
+        // sentinel byte
+        0xff => bytes[0];
 
         // clamps amp
         if (amp > 1.0) {
@@ -117,16 +128,14 @@ public class Port {
             0.0 => amp;
         }
 
-        num => bytes[4];
+        num => bytes[1];
 
         // amplitude byte
-        (amp * 0xff) $ int => bytes[3];
+        (amp * 0xff) $ int => bytes[2];
 
-        bytePacker((frq * mult) $ int, 3) @=> int freq[];
-
-        freq[2] => bytes[2];    
-        freq[1] => bytes[1];    
-        freq[0] => bytes[0];    
+        for (int i; i < 3; i++) {
+            (frq * mult) $ int >> i * 8 & 0xff => bytes[i + 3];
+        }
 
         // matches port to ID
         port(ID) => int p;
@@ -137,22 +146,18 @@ public class Port {
         else {
             <<< "No matching port for Arduino ID", ID >>>;
         }
-        100::samp => now;
+        <<< bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], frq * mult $ int >>>;
     }
 }
 
 Port p;
 p.init();
 
-1::second => now;
-8 => int ID;
+2 => int ID;
 
-//while (true) {  
-    p.note(ID, 0, Math.random2(8000,8100), 1.0);
-    2::second => now;
-    p.note(ID, 1, Math.random2(8000,8100), 1.0);
-    2::second => now;
-    p.note(ID, 3, Math.random2(8000,8100), 1.0);
-    2::second => now;
-//}
-
+while (true) {  
+    p.note(ID, 0, 5000.00, 1.0);
+    0.1::second => now;
+    p.note(ID, 1, 5000.00, 1.0);
+    0.1::second => now;
+}

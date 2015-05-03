@@ -27,16 +27,21 @@
 #include <avr/pgmspace.h>
 
 // ID number of the arduino, each robot must have a different one
-#define arduinoID 8
-byte handshake;
-byte bytes[6];
+#define arduinoID 2
+
+byte handshake[] = {
+  0xff, arduinoID};
+  
+byte bytes[5];
+byte check;
+
 float mult = 0.001;
 
 // "look Up Table size: has to be power of 2 so that the modulo LUTsize
 // can be done by picking bits from the phase avoiding arithmetic"
 const unsigned int LUTsize = 1 << 8;
 
-int8_t sintable[LUTsize] PROGMEM = {
+const int8_t sintable[LUTsize] PROGMEM = {
   127,130,133,136,139,143,146,149,152,155,158,161,164,167,170,173,
   176,179,182,184,187,190,193,195,198,200,203,205,208,210,213,215,
   217,219,221,224,226,228,229,231,233,235,236,238,239,241,242,244,
@@ -157,62 +162,48 @@ void setup() {
   o4.amplitude = 255 * 256;
 
   initializeTimer();
-  Serial.begin(28800);
+  Serial.begin(9600);
 }
 
 // unpacking function
-long byteUnpack(byte in[], int num_bytes) {  
+long byteUnpack(byte in[], int num_bytes, int start) {  
   long val = 0;
   for (int i = 0; i < num_bytes; i++) {
-    val += long(in[i]) << (i * 8);
+    val += long(in[i + start]) << (i * 8);
   }
   return val;
 }
 
 // recieves bytes from ChucK for assignment
-void recieveBytes() {
-  Serial.readBytes((char*)bytes, 6);
-  if (bytes[5] == 0xff) {
-    switch (bytes[4]) {
-    case 0:
-      o1.amplitude = 256 * bytes[3];  
-      o1.phase_increment = phaseinc(byteUnpack(bytes, 3) * mult);
-      break;
-    case 1:
-      o2.amplitude = 256 * bytes[3];
-      o2.phase_increment = phaseinc(byteUnpack(bytes, 3) * mult);
-      break;
-    case 2:
-      o3.amplitude = 256 * bytes[3];
-      o3.phase_increment = phaseinc(byteUnpack(bytes, 3) * mult);
-      break;
-    case 3:
-      o4.amplitude = 256 * bytes[3];
-      o4.phase_increment = phaseinc(byteUnpack(bytes, 3) * mult);
-      break;
-    }
-  }
-}
-
-// intializes communication
-void sendID() {
-  byte initialize[2];
-  Serial.readBytes((char*)initialize, 2);
-
-  // sends back arduino ID if handshake matches
-  if (initialize[0] == 0xff && initialize[1] == 0xff) { 
-    Serial.write(arduinoID);
-    handshake = 1;
-  } 
-}
-
-// main loop
 void loop() {
-  if (Serial.available() && handshake == 1) {
-    recieveBytes();
-  }
-  else if (Serial.available() && handshake == 0) {
-    sendID();
+  if (Serial.available()) {
+    check = Serial.read();
+    if (check == 0xff) {
+      Serial.readBytes((char*)bytes, 5);
+      if (bytes[0] == 0xff) {
+        Serial.write(handshake, 2);
+      }
+      else {                
+        switch (bytes[0]) {
+        case 0:
+          o1.amplitude = 256 * bytes[2];  
+          o1.phase_increment = phaseinc(byteUnpack(bytes, 3, 2) * mult);
+          break;
+        case 1:
+          o2.amplitude = 256 * bytes[2];
+          o2.phase_increment = phaseinc(byteUnpack(bytes, 3, 2) * mult);
+          break;
+        case 2:
+          o3.amplitude = 256 * bytes[2];
+          o3.phase_increment = phaseinc(byteUnpack(bytes, 3, 2) * mult);
+          break;
+        case 3:
+          o4.amplitude = 256 * bytes[2];
+          o4.phase_increment = phaseinc(byteUnpack(bytes, 3, 2) * mult);
+          break;
+        }
+      }
+    }
   }
 }
 
@@ -246,3 +237,5 @@ SIGNAL(TIMER2_OVF_vect)
   outputvalue4 = (((uint8_t)(o4.amplitude>>8)) * pgm_read_byte(sintable+((o4.phase>>16)%LUTsize)))>>8;
   o4.phase += (uint32_t)o4.phase_increment;
 }
+
+
