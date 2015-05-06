@@ -30,7 +30,6 @@ dur pulse, max_pulse;
 // ------------------MAIN LOOP ----------------------
 while(true)
 {
-    debug.print("while");
     debug.print("generate graphs");
     // generate new graphs
     for(int i; i < freqs.size(); i++)
@@ -42,10 +41,10 @@ while(true)
     for(int i; i < g.size(); i++)
     {
         Math.random2(0, g[i].size() - 1) => start_idx;
-
         
         if(Math.random2(0, 1))
         {
+            debug.print("BFS");
             g[i].BFS(start_idx) @=> a;
             if(a != NULL)
             {
@@ -53,20 +52,28 @@ while(true)
                 new PiezoArray @=> p[p.size() - 1];
                 p[p.size() - 1].init(a);
             }
+            else
+                debug.print("pair array:" + a + "is null");
         }
         else
         {
-           g[i].DFS(start_idx) @=> a;
+            debug.print("DFS");
+            g[i].DFS(start_idx) @=> a;
             if(a != NULL)
             {
                 p.size(p.size()+1);
                 new PiezoArray @=> p[p.size() - 1];
                 p[p.size() - 1].init(a);
             }
+            else
+                debug.print("pair array:" + a + "is null");
         }
     }
 
     debug.print("spork off piezo paths");
+    1::ms => max_pulse;
+    1 => num_times;
+
     // spork off piezo path navigations
     for(int i; i < p.size(); i++)
     {
@@ -76,7 +83,7 @@ while(true)
         if(num_times >= max_nt)
             num_times => max_nt;
 
-        if(pulse / ms > max_pulse / ms)
+        if(pulse / samp > max_pulse / samp)
             pulse => max_pulse;
 
         if(Math.random2(0, 1))
@@ -86,8 +93,14 @@ while(true)
         //play(p[i], num_times, pulse, piezo);
         //spork ~ deleter(i, num_times * pulse);
     }
-    <<< (max_pulse*max_nt)/second,"">>>;
-    max_pulse * max_nt => now;
+    p.size(0);
+    /* only uncomment if we can go back to sporking off playing
+    //debug.print("waiting: " + (max_pulse * max_nt) / second + " seconds");
+    //max_pulse * max_nt => now;
+    //debug.print("waiting: " + 1 + " second");
+    second => now;
+    p.size(0);
+    */
 }
 
 // ----------------------FUNCS-------------------------

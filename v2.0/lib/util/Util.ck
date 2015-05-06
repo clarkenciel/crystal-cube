@@ -1,6 +1,6 @@
 public class Util
 {
-    fun void print2d(float a[][])
+    fun void print2df(float a[][])
     {
         for(int i; i < a.size(); i++)
         {
@@ -14,7 +14,7 @@ public class Util
         chout.flush();
     }
 
-    fun void printPA(Pair a[])
+    fun void printPairArr(Pair a[])
     {
         for(int i; i < a.size(); i++)
         {
@@ -25,5 +25,15 @@ public class Util
     fun void print(string msg)
     {
         <<< msg, "" >>>;
+    }
+
+    fun void print(float m)
+    {
+        print("" + m);
+    }
+
+    fun void print(int m)
+    {
+        print("" + m);
     }
 }
