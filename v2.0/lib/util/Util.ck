@@ -14,6 +14,14 @@ public class Util
         chout.flush();
     }
 
+    fun void printPA(Pair a[])
+    {
+        for(int i; i < a.size(); i++)
+        {
+            <<< a[i].id, a[i].freq, "">>>;
+        }
+    }
+
     fun void print(string msg)
     {
         <<< msg, "" >>>;

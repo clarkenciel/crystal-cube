@@ -1,7 +1,6 @@
 // main.ck
 // the main loop of Crystal Growth installation
 // Author: Danny Clarke
-
 1::second => now; // wait for piezo handshakes
 
 Port piezo;
@@ -14,51 +13,65 @@ Util debug;
 
 // minimize our magical shit by declaring up front
 Lattice l;
-l.set([2, 3, 5]);
-l.generate(10, 36) @=> float freqs[][];
+l.set([2, 3, 5, 7]);
+l.generate(1000, 36) @=> float freqs[][];
 debug.print2d(freqs);
 
 Graph g[freqs.size()];
+debug.print(""+g.size());
 
-PiezoArray p[0];
+PiezoArray p[g.size()];
+Pair a[0];
 
-int start_idx, num_times, max_nt;
+int start_idx;
+1 => int num_times => int max_nt;
 dur pulse, max_pulse;
 
 // ------------------MAIN LOOP ----------------------
 while(true)
 {
-    debug.print("looping");
-    debug.print("making new graphs");
+    debug.print("while");
+    debug.print("generate graphs");
     // generate new graphs
     for(int i; i < freqs.size(); i++)
     {
-        debug.print("new graph: "+i);
         g[i].init(freqs[i],1 / (i + 1), i + 1);
     }
     
-    debug.print("passing to piezos");
-    // pass components to Piezo Array
+    debug.print("pass to piezo array");
     for(int i; i < g.size(); i++)
     {
-        debug.print("new piezo array: "+i);
-        p.size(p.size() + 1);
-        new PiezoArray @=> p[p.size() - 1];
-
         Math.random2(0, g[i].size() - 1) => start_idx;
 
+        
         if(Math.random2(0, 1))
-            p[p.size() - 1].init(g[i].BFS(start_idx));
+        {
+            g[i].BFS(start_idx) @=> a;
+            if(a != NULL)
+            {
+                p.size(p.size()+1);
+                new PiezoArray @=> p[p.size() - 1];
+                p[p.size() - 1].init(a);
+            }
+        }
         else
-            p[p.size() - 1].init(g[i].DFS(start_idx));
+        {
+           g[i].DFS(start_idx) @=> a;
+            if(a != NULL)
+            {
+                p.size(p.size()+1);
+                new PiezoArray @=> p[p.size() - 1];
+                p[p.size() - 1].init(a);
+            }
+        }
     }
 
-    debug.print("playing piezos");
+    debug.print("spork off piezo paths");
     // spork off piezo path navigations
     for(int i; i < p.size(); i++)
     {
         Math.random2(1, 10) => num_times;
-        Math.random2f(10, 2000)::ms => pulse;
+        Math.random2f(1000, 2000)::ms => pulse;
 
         if(num_times >= max_nt)
             num_times => max_nt;
@@ -66,16 +79,21 @@ while(true)
         if(pulse / ms > max_pulse / ms)
             pulse => max_pulse;
 
-        play(p[i], num_times, pulse, piezo);
-        spork ~ deleter(i, num_times * pulse);
+        if(Math.random2(0, 1))
+            p[i].sequential(num_times, pulse, piezo);
+        else
+            p[i].chord(num_times, pulse, piezo);
+        //play(p[i], num_times, pulse, piezo);
+        //spork ~ deleter(i, num_times * pulse);
     }
-    max_nt * max_pulse => now;
+    <<< (max_pulse*max_nt)/second,"">>>;
+    max_pulse * max_nt => now;
 }
 
 // ----------------------FUNCS-------------------------
 fun void play(PiezoArray p, int num_times, dur pulse, Port piezo)
 {
-    debug.print("sporking new thing"+num_times+"times @"+(pulse/second)+"seconds");
+    debug.print("sporking new thing "+num_times+" times @ "+(pulse/second)+"seconds");
     if(Math.random2(0, 1))
         spork ~ p.sequential(num_times, pulse, piezo);
     else

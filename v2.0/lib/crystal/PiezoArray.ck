@@ -16,7 +16,10 @@ public class PiezoArray
     */
     fun void init(Pair p[])
     {
-        p @=> path;
+        path.size(p.size());
+        for (int i; i < p.size(); i++) {
+            p[i] @=> path[i];
+        }
     }
 
     /*
@@ -26,14 +29,17 @@ public class PiezoArray
     */
     fun void sequential(int n, dur pulse, Port piezo)
     {
+        path.size() => int path_size;
         int count;
         while(count < n)
         {
-            for(int i; i < path.size(); i++)
+            for(int i; i < path_size; i++)
             {
+                <<< pulse/second >>>;
                 send(path[i], piezo);
-                pulse => now;
+                pulse / (path_size + 1) => now;
             }
+            count ++;
         }
     }
 
@@ -44,14 +50,17 @@ public class PiezoArray
     */
     fun void chord(int n, dur pulse, Port piezo)
     {
+        path.size() => int path_size;
         int count;
         while(count < n)
         {
-            for(int i; i < path.size(); i++ )
+            for(int i; i < path_size; i++ )
             {
                 send(path[i], piezo);
+                1::ms => now;
             }
             pulse => now;
+            count ++;
         }
     }
 
@@ -62,6 +71,7 @@ public class PiezoArray
     fun void send(Pair p, Port piezo)
     {
         map(p.id) @=> int address[];
+        <<< "sending "+p.freq+" to "+address[0]+", "+address[1],"">>>;
         piezo.note(address[0], address[1], p.freq, 1.0);
     }
 

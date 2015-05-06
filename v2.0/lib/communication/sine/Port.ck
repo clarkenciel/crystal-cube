@@ -95,7 +95,7 @@ public class Port {
             ID => arduinoID[i];
             <<< "ID", ID, "" >>>;
 
-            250::ms => now;
+            10::ms => now;
         }
     }
 
@@ -156,7 +156,7 @@ while (true) {
     for (int j; j < 9; j++) {
         for (int i; i < 4; i++) {
             p.note(j, i, 3000 + j * i, 1.0);
-            0.05::second => now;
+            1::samp => now;
         }
     }
 }

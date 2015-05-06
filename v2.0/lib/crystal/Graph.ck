@@ -22,14 +22,16 @@ public class Graph
         lo => related_lo;
         hi => related_hi;
 
-        for(int i; i < freqs.size(); i++) 
+        //for(int i; i < freqs.size(); i++) 
+        for(int i; i < 36; i++)
         {
-            Math.random2(0, freqs.size()-1) => rand_id;
+            //Math.random2(0, freqs.size()-1) => rand_id;
+            Math.random2(0, 35) => rand_id;
             if( !idIsSet(pairs, rand_id) ) 
             {
                 pairs.size(pairs.size() + 1);
                 new Pair @=> pairs[pairs.size() - 1];
-                pairs[pairs.size() - 1].init(rand_id, freqs[i]);
+                pairs[pairs.size() - 1].init(rand_id, freqs[i % freqs.size()]);
             }
         }
     }
@@ -92,6 +94,7 @@ public class Graph
     fun Pair[] DFS(int start_id)
     {
         getPairIdx(start_id) => int idx;
+        int didAdd;
 
         if(idx >= 0)
         {
@@ -100,6 +103,7 @@ public class Graph
             // do DFS
             while(idx >= 0)
             {
+                0 => didAdd;
                 for(int i; i < pairs.size(); i++)
                 {
                     if(isNeighbor(idx, i)
@@ -114,9 +118,14 @@ public class Graph
                         // change idx
                         i => idx;
 
+                        1 => didAdd;
                         // break out of this loop
                         break;
                     }
+                }
+                if(!didAdd)
+                {
+                    -1 => idx;
                 }
             }
 
