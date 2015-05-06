@@ -50,7 +50,7 @@ public class Port {
         int num;
         <<< "-", "" >>>;
         for (int i; i < serial_port.cap(); i++) {
-            if (list[i].find("tty") > 0) {
+            if (list[i].find("usb") > 0) {
                 i => serial_port[num];
                 num++;
             }
@@ -146,18 +146,17 @@ public class Port {
         else {
             <<< "No matching port for Arduino ID", ID >>>;
         }
-        <<< bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], frq * mult $ int >>>;
     }
 }
 
 Port p;
 p.init();
 
-2 => int ID;
-
-while (true) {  
-    p.note(ID, 0, 5000.00, 1.0);
-    0.1::second => now;
-    p.note(ID, 1, 5000.00, 1.0);
-    0.1::second => now;
+while (true) {
+    for (int j; j < 9; j++) {
+        for (int i; i < 4; i++) {
+            p.note(j, i, 3000 + j * i, 1.0);
+            0.05::second => now;
+        }
+    }
 }
