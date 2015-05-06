@@ -155,7 +155,7 @@ p.init();
 while (true) {
     for (int j; j < 9; j++) {
         for (int i; i < 4; i++) {
-            p.note(j, i, 3000 + j * i, 1.0);
+            p.note(j, i, 5000 * Math.random2f(0, 40) , 1.0);
             0.05::second => now;
         }
     }
