@@ -2,13 +2,15 @@
 // the main loop of Crystal Growth installation
 // Author: Danny Clarke
 
-// --------------------VARS--------------------------
-Util debug;
+1::second => now; // wait for piezo handshakes
 
 Port piezo;
 piezo.init();
 
-second => now; // wait for piezo handshakes
+1::second => now;
+
+// --------------------VARS--------------------------
+Util debug;
 
 // minimize our magical shit by declaring up front
 Lattice l;
@@ -24,9 +26,10 @@ int start_idx, num_times, max_nt;
 dur pulse, max_pulse;
 
 // ------------------MAIN LOOP ----------------------
-while( max_nt * max_pulse => now)
+while(true)
 {
-
+    debug.print("looping");
+    debug.print("making new graphs");
     // generate new graphs
     for(int i; i < freqs.size(); i++)
     {
@@ -34,6 +37,7 @@ while( max_nt * max_pulse => now)
         g[i].init(freqs[i],1 / (i + 1), i + 1);
     }
     
+    debug.print("passing to piezos");
     // pass components to Piezo Array
     for(int i; i < g.size(); i++)
     {
@@ -49,6 +53,7 @@ while( max_nt * max_pulse => now)
             p[p.size() - 1].init(g[i].DFS(start_idx));
     }
 
+    debug.print("playing piezos");
     // spork off piezo path navigations
     for(int i; i < p.size(); i++)
     {
@@ -64,6 +69,7 @@ while( max_nt * max_pulse => now)
         play(p[i], num_times, pulse, piezo);
         spork ~ deleter(i, num_times * pulse);
     }
+    max_nt * max_pulse => now;
 }
 
 // ----------------------FUNCS-------------------------

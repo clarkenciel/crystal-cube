@@ -1,2 +1,2 @@
 me.dir() => string d;
-Machine.add(d + "Port.ck") => int piezo;
+Machine.add(d + "/sine/Port.ck") => int port;

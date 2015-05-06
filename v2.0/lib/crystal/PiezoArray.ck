@@ -62,7 +62,7 @@ public class PiezoArray
     fun void send(Pair p, Port piezo)
     {
         map(p.id) @=> int address[];
-        piezo.note(address[0], address[1], p.freq);
+        piezo.note(address[0], address[1], p.freq, 1.0);
     }
 
     /*

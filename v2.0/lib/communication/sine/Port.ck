@@ -1,11 +1,13 @@
 // Port.ck
 
 // Eric Heep
+// April, 2015
+
 // Matches serial ports with their Arduino IDs 
 // receives ultrasonic sensor values and sends piezo 
 // phase increment values,
 
-// Created for the Crystal Cube installation in 
+// Created for the Crystal Growth installation in 
 // collaboration with Danny Clarke
 // CalArts Music Tech // MTIID4LIFE
 
@@ -21,15 +23,8 @@ public class Port {
     // array for receiving sensor values
     int sensor[9];
     
-    // arduino sampling rate
-    float arduino_sr;
-    arduinoSamplingRate(15625);
-
     // exponential multiplier for sending serial
-    Math.pow(10, 7) => float mult;
-
-    // two pi
-    pi * 2.0 => float two_pi;
+    Math.pow(10, 3) => float mult;
 
     // pairs arduinos and ports
     fun void init() { 
@@ -39,11 +34,6 @@ public class Port {
         openPorts();
         handshake();
     } 
-
-    // sets arduino sampling rate
-    fun void arduinoSamplingRate(float asr) {
-        asr => arduino_sr;
-    }
 
     // matches the proper arduino ID to the arduinoID array index
     fun int port(int ID) {
@@ -72,79 +62,84 @@ public class Port {
     // opens only how many serial ports there are usb ports connected
     fun void openPorts() {
         for (int i; i < serial.cap(); i++) {
-            if (!serial[i].open(serial_port[i], SerialIO.B57600, SerialIO.BINARY)) {
+            if (!serial[i].open(serial_port[i], SerialIO.B9600, SerialIO.BINARY)) {
                 <<< "Unable to open serial device:", "\t", list[serial_port[i]] >>>;
             }
             else {
-                <<< list[serial_port[i]], "assigned to port", serial_port[i], "" >>>;
+                <<< list[serial_port[i]], "opened on port", serial_port[i], "" >>>;
             }
         }
         <<< "-", "" >>>;
-        2.5::second => now;
+        3.0::second => now;
     }
 
     // pings the Arduinos and returns their 'arduinoID'
     fun void handshake() {
-        // flush out old messages
-        [255, 255] @=> int ping[];
+        [0xff, 0xff] @=> int ping[];
+        
         for (int i ; i < serial.cap(); i++) {
-            serial[i].writeBytes(ping);
-            serial[i].onByte() => now;
-            serial[i].getByte() => int ID;
+            -1 @=> int ID;
+            while (ID == -1) {
+                serial[i].writeBytes(ping);
+
+                serial[i].onByte() => now;
+                serial[i].getByte() => int arr;
+
+                if (arr == 0xff) {
+                    serial[i].onByte() => now;
+                    serial[i].getByte() => ID;
+                }
+            }
+
             // sets arduino ID array
             ID => arduinoID[i];
-            10::ms => now;
+            <<< "ID", ID, "" >>>;
+
+            250::ms => now;
         }
     }
 
-    // spork to begin receiving notes
     fun void receive(int ID) {
-        int which, val;
-        int data[3];
+        // will replace with CityGram
+    }
 
-        port(ID) => int p;
-        while (true) {
-            // waits
-            serial[p].onBytes(4) => now;
-            serial[p].getBytes() @=> data;
+    fun int[] bytePacker(int val, int num_bytes) {
+        int bytes[num_bytes];
 
-            // bit unpacking
-            (data[2] >> 3) & 15 => which;
-            (data[2] & 7) << 7 | data[3] => val;
-
-            // garbage filter
-            if (data[0] == 64 && data[1] == 64) {
-                val => sensor[which];
-            }
+        for (int i; i < num_bytes; i++) {
+            val >> (i * 8) & 0xff => bytes[i]; 
         }
+
+        return bytes;
     }
 
-    // tranlates frequency to phase increment
-    fun float frequencyToPhaseIncrement(float frq) {
-        return (frq / arduino_sr) * two_pi;
-    }
+    // sends serial
+    fun void note(int ID, int num, float frq, float amp) {
+        int bytes[6];  
+    
+        // sentinel byte
+        0xff => bytes[0];
 
-    // turns float into an int for sending over serial
-    fun int intPacking(float f) {
-        return ((f + 1.0) * mult) $ int; 
-    }
+        // clamps amp
+        if (amp > 1.0) {
+            1.0 => amp;
+        }
+        if (amp < 0.0) {
+            0.0 => amp;
+        }
 
-    // sends serial, allows note numbers 0-32
-    // and phase increment 0-134217728 
-    fun void note(int ID, int num, float frq) {
-        int bytes[4];
+        num => bytes[1];
 
-        intPacking(frequencyToPhaseIncrement(frq)) => int phase_inc;
+        // amplitude byte
+        (amp * 0xff) $ int => bytes[2];
 
-        // bit packing
-        num << 3 => bytes[0];
-        (phase_inc >> 24) | bytes[0] => bytes[0];
-        (phase_inc >> 16) & 255 => bytes[1];
-        (phase_inc >> 8) & 255 > bytes[2];
-        phase_inc & 255 => bytes[3];
+        for (int i; i < 3; i++) {
+            (frq * mult) $ int >> i * 8 & 0xff => bytes[i + 3];
+        }
 
         // matches port to ID
         port(ID) => int p;
+
         if (p != -1) {
             serial[p].writeBytes(bytes);
         }
@@ -153,18 +148,16 @@ public class Port {
         }
     }
 }
-
-
 /*
 Port p;
 p.init();
 
-2::second => now;
-spork ~ p.receive(0);
-
-while (true) {  
-    <<< p.sensor[0], p.sensor[1] >>>;
-    // p.note(Math.random2(1, 9), Math.random2(0,2), Math.random2(400, 1500));
-    //  p.note(i + 1, 2, Math.random2(400, 500));
-    200::ms => now;
-}*/
+while (true) {
+    for (int j; j < 9; j++) {
+        for (int i; i < 4; i++) {
+            p.note(j, i, 3000 + j * i, 1.0);
+            0.05::second => now;
+        }
+    }
+}
+*/
