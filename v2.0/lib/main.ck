@@ -45,6 +45,7 @@ int start_idx;
 dur pulse, max_pulse;
 
 // ------------------MAIN LOOP ----------------------
+spork ~ gramListen();
 while(true)
 {
 
@@ -143,4 +144,25 @@ fun void deleter(int idx, dur wait)
         p[i+1] @=> p[i];
     }
     p.size(p.size() - 1);
+}
+
+fun void gramListen()
+{
+    OscIn in;
+    OscMsg m;
+    in.listenAll();
+
+    while(true)
+    {
+        in => now;
+        while(in.recv(m))
+        {
+            if(m.address.find("rsd"))
+                m.getInt(0) => start_idx;
+            if(m.address.find("rmsstd"))
+                (Math.fabs(m.getFloat(0)) * 100 + 0.01)::ms => pulse;
+            if(m.address.find("centroid"))
+                m.getFloat(0) $ int => num_times;
+        }
+    }
 }
