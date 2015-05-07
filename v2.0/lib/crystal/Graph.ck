@@ -31,7 +31,7 @@ public class Graph
             {
                 pairs.size(pairs.size() + 1);
                 new Pair @=> pairs[pairs.size() - 1];
-                pairs[pairs.size() - 1].init(rand_id, freqs[i % freqs.size()]);
+                pairs[pairs.size() - 1].init(rand_id, freqs[Math.random2(0,freqs.size() - 1)]);
             }
         }
     }
@@ -82,7 +82,7 @@ public class Graph
         } 
         else
         {
-            return NULL;
+            return Pair path[0];
         }
     }
     
@@ -133,7 +133,7 @@ public class Graph
         } 
         else
         {
-            return NULL;
+            return Pair path[0];
         }
     }
 
