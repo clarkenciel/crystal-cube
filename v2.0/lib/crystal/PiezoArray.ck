@@ -27,19 +27,19 @@ public class PiezoArray
     * hit each piezo in the path in sequence
     * according to a pulse
     */
-    fun void sequential(int n, dur pulse, SinOsc piezo[][])//Port piezo)
+    fun void sequential(int n, dur pulse, Port piezo)
     {
         path.size() => int path_size;
         if(path_size)
         {
             int count;
-            <<< "seq:",path_size,"">>>;
-            <<< (pulse/path_size) / second >>>;
+            ///<<< "seq:",path_size,"">>>;
+            //<<< (pulse/path_size) / second >>>;
             while(count < n)
             {
                 for(int i; i < path_size; i++)
                 {
-                    <<< "seq "+me.id()+":",path[i].freq, "" >>>;
+                    //<<< "seq "+me.id()+":",path[i].freq, "" >>>;
                     send(path[i], piezo);
                     pulse / path_size => now;
                     kill(path[i], piezo);
@@ -54,24 +54,25 @@ public class PiezoArray
     * hit all piezos in path "simultaneously"
     * and repeat n times according to a pulse
     */
-    fun void chord(int n, dur pulse, SinOsc piezo[][])//Port piezo)
+    fun void chord(int n, dur pulse, Port piezo)
     {
         path.size() => int path_size;
         if(path_size)
         {
             int count;
-            <<< "chord","">>>;
-            <<< pulse/second >>>;
+            //<<< "chord","">>>;
+            //<<< pulse/second >>>;
             while(count < n)
             {
-                chout <= "chord: ";
                 for(int i; i < path_size; i++ )
                 {
                     send(path[i], piezo);
-                    chout <= path[i].freq + ", ";
                 }
-                chout <= "\n";
-                chout.flush();
+                pulse => now;
+                for(int i; i < path_size; i++ )
+                {
+                    kill(path[i], piezo);
+                }
                 pulse => now;
                 count ++;
             }
@@ -82,24 +83,24 @@ public class PiezoArray
     * send( piezo_id_freq_pair )
     * send freq to a piezo
     */
-    fun void send(Pair p, SinOsc s[][])// Port piezo)
+    fun void send(Pair p, Port piezo)
     {
         map(p.id) @=> int address[];
         //<<< "sending "+p.freq+" to "+address[0]+", "+address[1],"">>>;
-        //piezo.note(address[0], address[1], p.freq, 1.0);
-        s[address[0]][address[1]].freq(p.freq);
-        s[address[0]][address[1]].gain(0.9 / 36);
+        piezo.note(address[0], address[1], p.freq, 1.0);
+        //s[address[0]][address[1]].freq(p.freq);
+        //s[address[0]][address[1]].gain(0.9 / 36);
     }
 
     /*
     * kill( piezo id, piezo )
     * kill a piezo
     */
-    fun void kill(Pair p, SinOsc s[][]) // Port piezo)
+    fun void kill(Pair p, Port piezo)
     {
         map(p.id) @=> int address[];
-        //piezo.note(address[0], address[1], p.freq, 0.0);
-        s[address[0]][address[1]].gain(0.0);
+        piezo.note(address[0], address[1], p.freq, 0.0);
+        //s[address[0]][address[1]].gain(0.0);
     }
     /*
     * map( id)

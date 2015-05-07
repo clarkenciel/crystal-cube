@@ -31,7 +31,7 @@ public class Graph
             {
                 pairs.size(pairs.size() + 1);
                 new Pair @=> pairs[pairs.size() - 1];
-                pairs[pairs.size() - 1].init(rand_id, freqs[Math.random2(0,freqs.size() - 1)]);
+                pairs[pairs.size() - 1].init(rand_id, freqs[i % freqs.size()]);
             }
         }
     }
@@ -60,7 +60,7 @@ public class Graph
                 for(int i; i < pairs.size(); i++)
                 {
                     if(isNeighbor(cur_idx, pairs[i].id)
-                        && isRelated(pairs[cur_idx].freq, pairs[i].freq)
+                        //&& isRelated(pairs[cur_idx].freq, pairs[i].freq)
                         && !isIn(path, pairs[i]))
                     {
                         queue << i;
@@ -107,7 +107,7 @@ public class Graph
                 for(int i; i < pairs.size(); i++)
                 {
                     if(isNeighbor(idx, i)
-                        && isRelated(pairs[idx].freq, pairs[i].freq)
+                        //&& isRelated(pairs[idx].freq, pairs[i].freq)
                         && !isIn(path, pairs[i]))
                     {
                         // add to the path

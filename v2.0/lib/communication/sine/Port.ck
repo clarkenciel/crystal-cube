@@ -148,6 +148,7 @@ public class Port {
         }
     }
 }
+
 /*
 Port p;
 p.init();
@@ -155,8 +156,8 @@ p.init();
 while (true) {
     for (int j; j < 9; j++) {
         for (int i; i < 4; i++) {
-            p.note(j, i, 3000 + j * i, 1.0);
-            1::samp => now;
+            p.note(j, i, 1000 * (j * i + 1), 1.0);
+            100::samp => now;
         }
     }
 }

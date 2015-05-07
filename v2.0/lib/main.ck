@@ -1,14 +1,13 @@
 // main.ck
 // the main loop of Crystal Growth installation
 // Author: Danny Clarke
-/*
 1::second => now; // wait for piezo handshakes
 
 Port piezo;
 piezo.init();
 
 1::second => now;
-*/
+/*
 SinOsc piezo[9][4];
 Pan2 pan[9][4];
 int c;
@@ -22,15 +21,17 @@ for(int i; i < 9; i++)
         c++;
     }
 }
+*/
 
 // --------------------VARS--------------------------
 Util debug;
+1.0 => float fund;
 
 // minimize our magical shit by declaring up front
-[2,6,8,10,17,19] @=> int dims[];
+[2, 3, 5, 7] @=> int dims[];
 Lattice l;
 l.set(dims);
-l.generate(440, 100) @=> float freqs[][];
+l.generate(fund, 100) @=> float freqs[][];
 debug.print2df(freqs);
 
 Graph g[freqs.size()];
@@ -46,6 +47,7 @@ dur pulse, max_pulse;
 // ------------------MAIN LOOP ----------------------
 while(true)
 {
+
     debug.print("generate graphs");
     // generate new graphs
     for(int i; i < freqs.size(); i++)
@@ -88,7 +90,7 @@ while(true)
 
     debug.print("spork off piezo paths");
     1::ms => max_pulse;
-    1 => num_times;
+    1 => max_nt;
 
     // spork off piezo path navigations
     for(int i; i < p.size(); i++)
@@ -96,21 +98,34 @@ while(true)
         if(p[i].path.size())
         {
             Math.random2(1, 10) => num_times;
-            Math.random2f(1000, 2000)::ms => pulse;
+            Math.random2f(10000, 20000)::ms => pulse;
 
             if(pulse / samp > max_pulse / samp)
                 pulse => max_pulse;
 
+            if(num_times > max_nt)
+                num_times => max_nt;
+
             play(p[i], num_times, pulse, piezo);
-            num_times++;
+            spork ~ deleter(i, pulse * num_times);
+            //pulse => now;
+            second => now;
         }
     }
-    num_times * max_pulse => now;
-    p.size(0);
+    second => now;
+    /*
+    l.generate(fund, 100) @=> freqs;
+    debug.print2df(freqs);
+    g.size(freqs.size());
+    for(int i; i < g.size(); i++)
+        new Graph @=> g[i];
+    */
+    //num_times * max_pulse => now;
+    //p.size(0);
 }
 
 // ----------------------FUNCS-------------------------
-fun void play(PiezoArray p, int num_times, dur pulse, SinOsc piezo[][])//Port piezo)
+fun void play(PiezoArray p, int num_times, dur pulse, Port piezo)
 {
     debug.print("sporking new thing "+num_times+" times @ "+(pulse/second)+"seconds");
     if(Math.random2(0, 1))
@@ -119,3 +134,13 @@ fun void play(PiezoArray p, int num_times, dur pulse, SinOsc piezo[][])//Port pi
         spork ~ p.chord(num_times, pulse, piezo);
 }
 
+fun void deleter(int idx, dur wait)
+{
+    wait => now;
+    debug.print("deleting: "+idx);
+    for(idx => int i; i < p.size() - 1; i++)
+    {
+        p[i+1] @=> p[i];
+    }
+    p.size(p.size() - 1);
+}
