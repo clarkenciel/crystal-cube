@@ -48,7 +48,6 @@ dur pulse, max_pulse;
 spork ~ gramListen();
 while(true)
 {
-
     debug.print("generate graphs");
     // generate new graphs
     for(int i; i < freqs.size(); i++)
@@ -98,8 +97,10 @@ while(true)
     {
         if(p[i].path.size())
         {
+            /*
             Math.random2(1, 10) => num_times;
             Math.random2f(10000, 20000)::ms => pulse;
+            */
 
             if(pulse / samp > max_pulse / samp)
                 pulse => max_pulse;
@@ -109,20 +110,15 @@ while(true)
 
             play(p[i], num_times, pulse, piezo);
             spork ~ deleter(i, pulse * num_times);
-            //pulse => now;
-            second => now;
         }
     }
-    second => now;
-    /*
+
+    while(p.size() > 1)
+    {
+        debug.print(p.size());
+        ms => now;
+    }
     l.generate(fund, 100) @=> freqs;
-    debug.print2df(freqs);
-    g.size(freqs.size());
-    for(int i; i < g.size(); i++)
-        new Graph @=> g[i];
-    */
-    //num_times * max_pulse => now;
-    //p.size(0);
 }
 
 // ----------------------FUNCS-------------------------
@@ -158,11 +154,15 @@ fun void gramListen()
         while(in.recv(m))
         {
             if(m.address.find("rsd"))
+            {
                 m.getInt(0) => start_idx;
+                if(start_idx > 35) 35 => start_idx;
+                if(start_idx < 0) 0 => start_idx;
+            }
             if(m.address.find("rmsstd"))
                 (Math.fabs(m.getFloat(0)) * 100 + 0.01)::ms => pulse;
             if(m.address.find("centroid"))
-                m.getFloat(0) $ int => num_times;
+                (m.getFloat(0) + 1) $ int => num_times;
         }
     }
 }
