@@ -1,7 +1,8 @@
 public class Util
 {
-    fun void print2df(float a[][])
+    fun void print2df(string msg, float a[][])
     {
+        <<< msg, "" >>>;
         for(int i; i < a.size(); i++)
         {
             chout <= "\n";
@@ -20,6 +21,18 @@ public class Util
         {
             <<< a[i].id, a[i].freq, "">>>;
         }
+    }
+
+    fun void printIArr(string msg, int a[])
+    {
+        <<< msg, "" >>>;
+        chout <= "[";
+        for(int i; i < a.size(); i++)
+        {
+            chout <= a[i] + " ";
+        }
+        chout <= "]\n";
+        chout.flush();
     }
 
     fun void print(string msg)
